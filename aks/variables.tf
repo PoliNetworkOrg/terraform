@@ -13,6 +13,12 @@ variable "bot_token" {
   nullable = false
 }
 
+variable "bot_onMessage" {
+  type     = string
+  nullable = false
+}
+
+
 variable "db_database" {
   type     = string
   nullable = false

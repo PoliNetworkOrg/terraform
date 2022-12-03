@@ -26,6 +26,7 @@ module "argo_cd" {
   ]
 
   bot_token   = "a"
+  bot_onMessage = "m"
   db_database = "b"
   db_host     = "c"
   db_password = "d"

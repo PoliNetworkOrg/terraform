@@ -1,83 +1,45 @@
-resource "kubernetes_namespace" "argocd" {
-  metadata {
-    name = var.namespace
+resource "random_id" "log_analytics_workspace_name_suffix" {
+  byte_length = 8
+}
+
+resource "azurerm_resource_group" "rg" {
+  name     = "rg-polinetwork"
+  location = "West Europe"
+}
+
+resource "azurerm_kubernetes_cluster" "k8s" {
+  location            = "westeurope"
+  name                = "aks-polinetwork"
+  resource_group_name = azurerm_resource_group.rg.name
+  dns_prefix          = "akspolinetwork"
+  tags                = {
+    Environment = "Development"
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  default_node_pool {
+    name       = "agentpool"
+    vm_size    = "standard_a2_v2"
+    node_count = 1
+  }
+  linux_profile {
+    admin_username = "ubuntu"
+
+    ssh_key {
+      key_data = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIETs+7W2exMT/Ekos8bagl/raY0YGiQLK7l7Q9dpBLyL Microsoft AKS SSH Key"
+    }
+  }
+  network_profile {
+    network_plugin    = "kubenet"
+    load_balancer_sku = "standard"
   }
 }
 
-resource "kubernetes_namespace" "bot" {
-  metadata {
-    name = "bot"
-  }
-}
-
-resource "helm_release" "argo_cd" {
-  name       = "argo"
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
-  version    = "5.5.7"
-  namespace  = var.namespace
-
-  cleanup_on_fail  = true
-  create_namespace = true
-
-  values = [
-    templatefile("${path.module}/values/argo_cd.tftpl", {
-      # repo_credentials  = var.repo_credentials
-    })
-  ]
-}
-
-resource "helm_release" "argocd_apps" {
-  name       = "argocd-apps"
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argocd-apps"
-  namespace  = var.namespace
-
-  cleanup_on_fail  = true
-  create_namespace = true
-
-  values = var.applications
-
-  depends_on = [
-    helm_release.argo_cd,
-    kubernetes_secret.bot_secrets
-  ]
-}
-
-
-resource "kubernetes_secret" "bot_secrets" {
-  metadata {
-    name      = "bot-config-secret"
-    namespace = "bot"
-  }
-
-  data = {
-    "config.json" = jsonencode({
-      "bots" : [
-        {
-          botTypeApi             = 1,
-          token                  = var.bot_token,
-          website                = null,
-          contactString          = null,
-          onMessages             = "m",
-          acceptedMessages       = true,
-          SessionUserId          = null,
-          userId                 = null,
-          apiId                  = null,
-          apiHash                = null,
-          NumberCountry          = null,
-          NumberNumber           = null,
-          passwordToAuthenticate = null,
-          method                 = null
-        }
-      ]
-    })
-    "database.json" = jsonencode({
-      Database = "polinetwork_test",
-      Host     = var.db_host,
-      Password = var.db_password,
-      Port     = 3306,
-      User     = var.db_user
-    })
-  }
+resource "local_file" "kubeconfig" {
+  depends_on   = [azurerm_kubernetes_cluster.k8s]
+  filename     = "kubeconfig"
+  content      = azurerm_kubernetes_cluster.k8s.kube_config_raw
 }
