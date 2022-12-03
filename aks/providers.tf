@@ -20,10 +20,6 @@ terraform {
   }
 }
 
-# Configure the Microsoft Azure Provider
-provider "azurerm" {
-  features {}
-}
 
 # Kubectl provider
 # provider "kubernetes" {
