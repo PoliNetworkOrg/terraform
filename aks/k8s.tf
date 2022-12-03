@@ -12,7 +12,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   name                = "aks-polinetwork"
   resource_group_name = azurerm_resource_group.rg.name
   dns_prefix          = "akspolinetwork"
-  tags                = {
+  tags = {
     Environment = "Development"
   }
 
@@ -39,7 +39,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
 }
 
 resource "local_file" "kubeconfig" {
-  depends_on   = [azurerm_kubernetes_cluster.k8s]
-  filename     = "kubeconfig"
-  content      = azurerm_kubernetes_cluster.k8s.kube_config_raw
+  depends_on = [azurerm_kubernetes_cluster.k8s]
+  filename   = "kubeconfig"
+  content    = azurerm_kubernetes_cluster.k8s.kube_config_raw
 }
