@@ -25,12 +25,12 @@ module "argo_cd" {
     file("./argocd-applications.yaml")
   ]
 
-  bot_token   = "a"
+  bot_token     = "a"
   bot_onMessage = "m"
-  db_database = "b"
-  db_host     = "c"
-  db_password = "d"
-  db_user     = "e"
+  db_database   = "b"
+  db_host       = "c"
+  db_password   = "d"
+  db_user       = "e"
 
 }
 
