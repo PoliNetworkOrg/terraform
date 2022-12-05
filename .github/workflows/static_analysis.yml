@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: run_init
-        run: bash .utils/terraform_run_all.sh init docker
+        run: bash .utils/terraform_run_all.sh init local
       - name: run_test
         run: |
           TAG=v1.76.0
