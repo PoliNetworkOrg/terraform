@@ -7,11 +7,17 @@ resource "azurerm_resource_group" "rg" {
   location = "West Europe"
 }
 
+
 resource "azurerm_kubernetes_cluster" "k8s" {
   location            = "westeurope"
   name                = "aks-polinetwork"
   resource_group_name = azurerm_resource_group.rg.name
   dns_prefix          = "akspolinetwork"
+  api_server_authorized_ip_ranges = [
+    "185.178.95.235/32"
+  ]
+  role_based_access_control_enabled = true
+
   tags = {
     Environment = "Development"
   }
@@ -33,9 +39,12 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     }
   }
   network_profile {
+    network_policy    = "calico"
     network_plugin    = "kubenet"
     load_balancer_sku = "standard"
   }
+
+
 }
 
 resource "local_file" "kubeconfig" {
