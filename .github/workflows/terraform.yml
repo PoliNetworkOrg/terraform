@@ -18,6 +18,8 @@ jobs:
         with:
           creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
 
+      - run: echo "${{ secrets.SUBSCRIPTION_ID }}"
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
