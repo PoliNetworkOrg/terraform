@@ -14,7 +14,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: az login
+      - uses: Azure/login@v1
+        with:
+          creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
