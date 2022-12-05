@@ -60,8 +60,9 @@ function terraform_init(){
   fi
 }
 
-for folder in ./*; do
-  terraform_init "." &
+for folder in *; do
+  terraform_init "${folder}" &
+
   # Add the PID of this background job to the array.
   pids+=($!)
 done
