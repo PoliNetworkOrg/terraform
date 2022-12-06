@@ -12,6 +12,8 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     steps:
       - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+
       - name: run_init
         run: |
           terraform init
