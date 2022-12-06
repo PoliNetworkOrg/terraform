@@ -3,6 +3,9 @@ resource "azurerm_resource_group" "rg" {
   location = "West Europe"
 }
 
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
 
 resource "azurerm_kubernetes_cluster" "k8s" {
   location            = "westeurope"
@@ -10,7 +13,8 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   resource_group_name = azurerm_resource_group.rg.name
   dns_prefix          = "aks-polinetwork"
   api_server_authorized_ip_ranges = [
-    "185.178.95.235/32"
+    "185.178.95.235/32",
+    "${chomp(data.http.myip.body)}/32"
   ]
   role_based_access_control_enabled = true
 
