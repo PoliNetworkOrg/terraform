@@ -1,23 +1,3 @@
-data "azurerm_key_vault_secret" "dev_mod_bot_token" {
-  name         = "dev-mod-bot-token"
-  key_vault_id = data.terraform_remote_state.security.outputs.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "dev_db_host" {
-  name         = "dev-db-host"
-  key_vault_id = data.terraform_remote_state.security.outputs.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "dev_db_password" {
-  name         = "dev-db-password"
-  key_vault_id = data.terraform_remote_state.security.outputs.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "dev_db_user" {
-  name         = "dev-db-user"
-  key_vault_id = data.terraform_remote_state.security.outputs.key_vault_id
-}
-
 module "argo_cd" {
   source = "./aks/"
 
@@ -25,12 +5,12 @@ module "argo_cd" {
     file("./argocd-applications.yaml")
   ]
 
-  bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
+  bot_token     = module.argo_cd.dev_mod_bot_token
   bot_onMessage = "m"
   db_database   = "polinetwork_test"
-  db_host       = data.azurerm_key_vault_secret.dev_db_host.value
-  db_password   = data.azurerm_key_vault_secret.dev_db_password.value
-  db_user       = data.azurerm_key_vault_secret.dev_db_user.value
+  db_host       = module.argo_cd.dev_db_host
+  db_password   = module.argo_cd.dev_db_password
+  db_user       = module.argo_cd.dev_db_user
 
 }
 

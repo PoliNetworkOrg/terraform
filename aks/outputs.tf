@@ -35,5 +35,26 @@ output "kube_config" {
 }
 
 output "resource_group_name" {
-  value = azurerm_resource_group.rg.name
+  value     = azurerm_resource_group.rg.name
+  sensitive = true
+}
+
+output "dev_mod_bot_token" {
+  value     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
+  sensitive = true
+}
+
+output "dev_db_host" {
+  value     = data.azurerm_key_vault_secret.dev_db_host.value
+  sensitive = true
+}
+
+output "dev_db_password" {
+  value     = data.azurerm_key_vault_secret.dev_db_password.value
+  sensitive = true
+}
+
+output "dev_db_user" {
+  value     = data.azurerm_key_vault_secret.dev_db_user.value
+  sensitive = true
 }
