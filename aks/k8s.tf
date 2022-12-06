@@ -1,7 +1,3 @@
-resource "random_id" "log_analytics_workspace_name_suffix" {
-  byte_length = 8
-}
-
 resource "azurerm_resource_group" "rg" {
   name     = "rg-polinetwork"
   location = "West Europe"
