@@ -25,8 +25,13 @@ terraform {
 }
 
 
-# Kubectl provider
-# provider "kubernetes" {
-#   config_path    = "~/.kube/config"
-#   config_context = "elma-aks"
-# }
+provider "azurerm" {
+  features {}
+
+}
+
+
+provider "kubernetes" {
+  config_path    = "."
+  config_context = "aks-polinetwork"
+}
