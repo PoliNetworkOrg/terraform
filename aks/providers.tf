@@ -24,13 +24,6 @@ terraform {
   }
 }
 
-
-provider "azurerm" {
-  features {}
-
-}
-
-
 provider "kubernetes" {
   config_path    = "."
   config_context = "aks-polinetwork"
