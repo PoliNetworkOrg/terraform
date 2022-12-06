@@ -39,12 +39,4 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     network_plugin    = "kubenet"
     load_balancer_sku = "standard"
   }
-
-
-}
-
-resource "local_file" "kubeconfig" {
-  depends_on = [azurerm_kubernetes_cluster.k8s]
-  filename   = "kubeconfig"
-  content    = azurerm_kubernetes_cluster.k8s.kube_config_raw
 }
