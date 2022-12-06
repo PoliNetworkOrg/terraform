@@ -15,8 +15,9 @@ data "terraform_remote_state" "security" {
   config = {
     hostname     = "app.terraform.io"
     organization = "polinetworkAPS"
+
     workspaces = {
-      name = "qpq-dev-security"
+      name = "aks-polinetwork"
     }
   }
 }
