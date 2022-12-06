@@ -25,19 +25,21 @@ resource "azurerm_key_vault" "keyvalue" {
     tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = data.azurerm_client_config.current.object_id
 
-    key_permissions = [
-      "Get",
+    key_permissions = ["Get", "List", "Update", "Create", "Import", "Delete",
+      "Recover", "Backup", "Restore"
     ]
 
-    secret_permissions = [
-      "Get",
+    secret_permissions = ["Get", "List", "Set", "Delete", "Recover", "Backup",
+      "Restore"
     ]
 
-    storage_permissions = [
-      "Get",
+    certificate_permissions = ["Get", "List", "Update", "Create", "Import",
+      "Delete", "Recover", "Backup", "Restore", "ManageContacts", "ManageIssuers",
+      "GetIssuers", "ListIssuers", "SetIssuers", "DeleteIssuers", "Purge"
     ]
   }
 }
+
 
 data "azurerm_key_vault_secret" "dev_mod_bot_token" {
   name         = "dev-mod-bot-token"
