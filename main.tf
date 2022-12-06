@@ -25,12 +25,12 @@ module "argo_cd" {
     file("./argocd-applications.yaml")
   ]
 
-  bot_token     = "a"
+  bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
   bot_onMessage = "m"
-  db_database   = "b"
-  db_host       = "c"
-  db_password   = "d"
-  db_user       = "e"
+  db_database   = "polinetwork_test"
+  db_host       = data.azurerm_key_vault_secret.dev_db_host.value
+  db_password   = data.azurerm_key_vault_secret.dev_db_password.value
+  db_user       = data.azurerm_key_vault_secret.dev_db_user.value
 
 }
 
