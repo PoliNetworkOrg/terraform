@@ -7,6 +7,10 @@ data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
 
+locals {
+  my_ip = "${chomp(data.http.myip.response_body)}/32"
+}
+
 resource "azurerm_kubernetes_cluster" "k8s" {
   location            = "westeurope"
   name                = "aks-polinetwork"
@@ -14,7 +18,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   dns_prefix          = "aks-polinetwork"
   api_server_authorized_ip_ranges = [
     "185.178.95.235/32",
-    "${chomp(data.http.myip.body)}/32"
+    local.my_ip
   ]
   role_based_access_control_enabled = true
 
