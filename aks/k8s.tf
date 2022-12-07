@@ -19,6 +19,7 @@ resource "azurerm_key_vault" "keyvalue" {
   network_acls {
     bypass         = "AzureServices"
     default_action = "Deny"
+    ip_rules       = local.allowed_ips
   }
 
   access_policy {
@@ -69,15 +70,19 @@ locals {
   my_ip = "${chomp(data.http.myip.response_body)}/32"
 }
 
-resource "azurerm_kubernetes_cluster" "k8s" {
-  location            = "westeurope"
-  name                = "aks-polinetwork"
-  resource_group_name = azurerm_resource_group.rg.name
-  dns_prefix          = "aks-polinetwork"
-  api_server_authorized_ip_ranges = [
+locals {
+  allowed_ips = [
     "185.178.95.235/32",
     local.my_ip
   ]
+}
+
+resource "azurerm_kubernetes_cluster" "k8s" {
+  location                          = "westeurope"
+  name                              = "aks-polinetwork"
+  resource_group_name               = azurerm_resource_group.rg.name
+  dns_prefix                        = "aks-polinetwork"
+  api_server_authorized_ip_ranges   = local.allowed_ips
   role_based_access_control_enabled = true
 
   tags = {
