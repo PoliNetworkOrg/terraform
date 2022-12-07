@@ -63,10 +63,10 @@ resource "kubernetes_secret" "bot_secrets_dev" {
       "bots" : [
         {
           botTypeApi             = 1,
-          token                  = var.prod_bot_token,
+          token                  = var.dev_bot_token,
           website                = null,
           contactString          = null,
-          onMessages             = var.prod_bot_onMessage,
+          onMessages             = var.dev_bot_onMessage,
           acceptedMessages       = true,
           SessionUserId          = null,
           userId                 = null,
