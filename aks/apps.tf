@@ -6,13 +6,13 @@ resource "kubernetes_namespace" "argocd" {
 
 resource "kubernetes_namespace" "bot-dev" {
   metadata {
-    name = "bot"
+    name = "bot-dev"
   }
 }
 
 resource "kubernetes_namespace" "bot-prod" {
   metadata {
-    name = "bot"
+    name = "bot-prod"
   }
 }
 
