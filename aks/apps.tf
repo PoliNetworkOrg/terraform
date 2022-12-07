@@ -52,7 +52,7 @@ resource "kubernetes_secret" "bot_secrets" {
   }
 
   data = {
-    "config.json" = jsonencode({
+    "bots_info.json" = jsonencode({
       "bots" : [
         {
           botTypeApi             = 1,
@@ -72,7 +72,7 @@ resource "kubernetes_secret" "bot_secrets" {
         }
       ]
     })
-    "database.json" = jsonencode({
+    "dbconfig.json" = jsonencode({
       Database = "polinetwork_test",
       Host     = var.db_host,
       Password = var.db_password,
