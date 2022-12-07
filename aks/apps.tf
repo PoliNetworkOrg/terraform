@@ -4,7 +4,13 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-resource "kubernetes_namespace" "bot" {
+resource "kubernetes_namespace" "bot-dev" {
+  metadata {
+    name = "bot"
+  }
+}
+
+resource "kubernetes_namespace" "bot-prod" {
   metadata {
     name = "bot"
   }
