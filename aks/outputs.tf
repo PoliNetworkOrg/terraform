@@ -44,6 +44,11 @@ output "dev_mod_bot_token" {
   sensitive = true
 }
 
+output "prod_mod_bot_token" {
+  value     = data.azurerm_key_vault_secret.prod_mod_bot_token.value
+  sensitive = true
+}
+
 output "dev_db_host" {
   value     = data.azurerm_key_vault_secret.dev_db_host.value
   sensitive = true
@@ -55,6 +60,11 @@ output "dev_db_password" {
 }
 
 output "dev_db_user" {
+  value     = data.azurerm_key_vault_secret.dev_db_user.value
+  sensitive = true
+}
+
+output "dev_db_database" {
   value     = data.azurerm_key_vault_secret.dev_db_user.value
   sensitive = true
 }

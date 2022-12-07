@@ -10,7 +10,26 @@ applications:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: bot
+      namespace: bot-dev
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+    info:
+    - name: url
+      value: https://argoproj.github.io/
+  - name: bot-prod
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+      targetRevision: HEAD
+      path: prod
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: bot-prod
     syncPolicy:
       automated:
         prune: true

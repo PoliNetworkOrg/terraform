@@ -4,9 +4,15 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-resource "kubernetes_namespace" "bot" {
+resource "kubernetes_namespace" "bot-dev" {
   metadata {
-    name = "bot"
+    name = "bot-dev"
+  }
+}
+
+resource "kubernetes_namespace" "bot-prod" {
+  metadata {
+    name = "bot-prod"
   }
 }
 
@@ -40,15 +46,16 @@ resource "helm_release" "argocd_apps" {
 
   depends_on = [
     helm_release.argo_cd,
-    kubernetes_secret.bot_secrets
+    kubernetes_secret.bot_secrets_dev,
+    kubernetes_secret.bot_secrets_prod
   ]
 }
 
 
-resource "kubernetes_secret" "bot_secrets" {
+resource "kubernetes_secret" "bot_secrets_dev" {
   metadata {
     name      = "bot-config-secret"
-    namespace = "bot"
+    namespace = "bot-dev"
   }
 
   data = {
@@ -56,10 +63,10 @@ resource "kubernetes_secret" "bot_secrets" {
       "bots" : [
         {
           botTypeApi             = 1,
-          token                  = var.bot_token,
+          token                  = var.dev_bot_token,
           website                = null,
           contactString          = null,
-          onMessages             = var.bot_onMessage,
+          onMessages             = var.dev_bot_onMessage,
           acceptedMessages       = true,
           SessionUserId          = null,
           userId                 = null,
@@ -73,11 +80,48 @@ resource "kubernetes_secret" "bot_secrets" {
       ]
     })
     "dbconfig.json" = jsonencode({
-      Database = "polinetwork_test",
-      Host     = var.db_host,
-      Password = var.db_password,
+      Database = var.dev_db_database,
+      Host     = var.dev_db_host,
+      Password = var.dev_db_password,
       Port     = 3306,
-      User     = var.db_user
+      User     = var.dev_db_user
+    })
+  }
+}
+
+resource "kubernetes_secret" "bot_secrets_prod" {
+  metadata {
+    name      = "bot-config-secret"
+    namespace = "bot-prod"
+  }
+
+  data = {
+    "bots_info.json" = jsonencode({
+      "bots" : [
+        {
+          botTypeApi             = 1,
+          token                  = var.prod_bot_token,
+          website                = null,
+          contactString          = null,
+          onMessages             = var.prod_bot_onMessage,
+          acceptedMessages       = true,
+          SessionUserId          = null,
+          userId                 = null,
+          apiId                  = null,
+          apiHash                = null,
+          NumberCountry          = null,
+          NumberNumber           = null,
+          passwordToAuthenticate = null,
+          method                 = null
+        }
+      ]
+    })
+    "dbconfig.json" = jsonencode({
+      Database = var.prod_db_database,
+      Host     = var.prod_db_host,
+      Password = var.prod_db_password,
+      Port     = 3306,
+      User     = var.prod_db_user
     })
   }
 }

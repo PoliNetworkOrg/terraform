@@ -46,6 +46,11 @@ data "azurerm_key_vault_secret" "dev_mod_bot_token" {
   key_vault_id = azurerm_key_vault.keyvalue.id
 }
 
+data "azurerm_key_vault_secret" "prod_mod_bot_token" {
+  name         = "prod-mod-bot-token"
+  key_vault_id = azurerm_key_vault.keyvalue.id
+}
+
 data "azurerm_key_vault_secret" "dev_db_host" {
   name         = "dev-db-host"
   key_vault_id = azurerm_key_vault.keyvalue.id

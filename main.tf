@@ -5,13 +5,19 @@ module "argo_cd" {
     file("./argocd-applications.yaml")
   ]
 
-  bot_token     = module.argo_cd.dev_mod_bot_token
-  bot_onMessage = "m"
-  db_database   = "polinetwork_test"
-  db_host       = module.argo_cd.dev_db_host
-  db_password   = module.argo_cd.dev_db_password
-  db_user       = module.argo_cd.dev_db_user
+  dev_bot_token     = module.argo_cd.dev_mod_bot_token
+  dev_bot_onMessage = "m"
+  dev_db_database   = "polinetwork_test"
+  dev_db_host       = module.argo_cd.dev_db_host
+  dev_db_password   = module.argo_cd.dev_db_password
+  dev_db_user       = module.argo_cd.dev_db_user
 
+  prod_bot_token     = module.argo_cd.prod_mod_bot_token
+  prod_bot_onMessage = "m"
+  prod_db_database   = "polinetwork"
+  prod_db_host       = module.argo_cd.dev_db_host
+  prod_db_password   = module.argo_cd.dev_db_password
+  prod_db_user       = module.argo_cd.dev_db_user
 }
 
 # HOW TO CONFIGURE INFRA
