@@ -19,7 +19,7 @@ resource "azurerm_key_vault" "keyvalue" {
   network_acls {
     bypass         = "AzureServices"
     default_action = "Deny"
-    ip_rules       = local.allowed_ips
+    ip_rules       = [local.elia-ip]
   }
 
   access_policy {
@@ -40,7 +40,6 @@ resource "azurerm_key_vault" "keyvalue" {
     ]
   }
 }
-
 
 data "azurerm_key_vault_secret" "dev_mod_bot_token" {
   name         = "dev-mod-bot-token"
@@ -67,22 +66,27 @@ data "http" "myip" {
 }
 
 locals {
-  my_ip = "${chomp(data.http.myip.response_body)}/32"
+  my_ip   = "${chomp(data.http.myip.response_body)}/32"
+  elia-ip = "185.178.95.235/32"
 }
 
+data "github_ip_ranges" "ci-cd" {}
+
 locals {
-  allowed_ips = [
-    "185.178.95.235/32",
-    local.my_ip
-  ]
+  allowed_ip_ranges = concat([for github_cidr in data.github_ip_ranges.ci-cd.actions_ipv4 : github_cidr], ["185.178.95.235/32", local.my_ip])
+  allowed_ip_rules = [for cidr in local.allowed_ip_ranges : {
+    action   = "Allow",
+    ip_range = cidr
+  }]
 }
+
 
 resource "azurerm_kubernetes_cluster" "k8s" {
   location                          = "westeurope"
   name                              = "aks-polinetwork"
   resource_group_name               = azurerm_resource_group.rg.name
   dns_prefix                        = "aks-polinetwork"
-  api_server_authorized_ip_ranges   = local.allowed_ips
+  api_server_authorized_ip_ranges   = [local.elia-ip]
   role_based_access_control_enabled = true
 
   tags = {
