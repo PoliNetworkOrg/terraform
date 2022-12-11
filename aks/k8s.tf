@@ -66,6 +66,12 @@ data "azurerm_key_vault_secret" "dev_db_user" {
   key_vault_id = azurerm_key_vault.keyvalue.id
 }
 
+data "azurerm_key_vault_secret" "admin_db_password" {
+  name         = "admin-db-password"
+  key_vault_id = azurerm_key_vault.keyvalue.id
+}
+
+
 data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
@@ -94,6 +100,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   api_server_authorized_ip_ranges   = [local.elia-ip]
   role_based_access_control_enabled = true
 
+
   tags = {
     Environment = "Development"
   }
@@ -103,9 +110,10 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   }
 
   default_node_pool {
-    name       = "agentpool"
-    vm_size    = "standard_a2_v2"
-    node_count = 1
+    name         = "agentpool"
+    vm_size      = "standard_a2_v2"
+    node_count   = 1
+    os_disk_type = "Managed"
   }
   linux_profile {
     admin_username = "ubuntu"
@@ -119,6 +127,37 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     network_plugin    = "kubenet"
     load_balancer_sku = "standard"
   }
+}
 
+resource "azurerm_managed_disk" "storage" {
+  name                 = "acctestmd1"
+  location             = azurerm_resource_group.rg.location
+  resource_group_name  = azurerm_resource_group.rg.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = "1000"
 
+  tags = {
+    environment = "staging"
+  }
+}
+
+resource "kubernetes_persistent_volume" "storageaks" {
+  metadata {
+    name = "storage"
+  }
+  spec {
+    capacity = {
+      storage = "1000Gi"
+    }
+    access_modes = ["ReadWrite"]
+    persistent_volume_source {
+      azure_disk {
+        caching_mode  = "None"
+        data_disk_uri = azurerm_managed_disk.storage.id
+        disk_name     = "storage"
+        kind          = "Managed"
+      }
+    }
+  }
 }
