@@ -120,7 +120,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
 }
 
 resource "azurerm_managed_disk" "storage" {
-  name                 = "acctestmd1"
+  name                 = "mg-polinetwork"
   location             = azurerm_resource_group.rg.location
   resource_group_name  = azurerm_resource_group.rg.name
   storage_account_type = "Standard_LRS"
