@@ -81,16 +81,6 @@ locals {
   elia-ip = "185.178.95.235/32"
 }
 
-data "github_ip_ranges" "ci-cd" {}
-
-locals {
-  allowed_ip_ranges = concat([for github_cidr in data.github_ip_ranges.ci-cd.actions_ipv4 : github_cidr], ["185.178.95.235/32", local.my_ip])
-  allowed_ip_rules = [for cidr in local.allowed_ip_ranges : {
-    action   = "Allow",
-    ip_range = cidr
-  }]
-}
-
 
 resource "azurerm_kubernetes_cluster" "k8s" {
   location                          = "westeurope"
