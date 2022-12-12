@@ -138,9 +138,9 @@ resource "kubernetes_persistent_volume" "storageaks" {
   }
   spec {
     capacity = {
-      storage = "1000G"
+      storage = "1000Gi"
     }
-    access_modes = ["ReadWrite"]
+    access_modes = ["ReadWriteOnce"]
     persistent_volume_source {
       azure_disk {
         caching_mode  = "None"
