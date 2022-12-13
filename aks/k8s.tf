@@ -1,77 +1,3 @@
-resource "azurerm_resource_group" "rg" {
-  name     = "rg-polinetwork"
-  location = "West Europe"
-}
-
-data "azurerm_client_config" "current" {}
-
-resource "azurerm_key_vault" "keyvalue" {
-  name                        = "kv-polinetwork"
-  location                    = "West Europe"
-  resource_group_name         = azurerm_resource_group.rg.name
-  enabled_for_disk_encryption = true
-  tenant_id                   = data.azurerm_client_config.current.tenant_id
-  soft_delete_retention_days  = 7
-  purge_protection_enabled    = true
-
-  sku_name = "standard"
-
-  network_acls {
-    bypass         = "AzureServices"
-    default_action = "Deny"
-    ip_rules       = [local.elia-ip]
-  }
-
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-
-    key_permissions = ["Get", "List", "Update", "Create", "Import", "Delete",
-      "Recover", "Backup", "Restore"
-    ]
-
-    secret_permissions = ["Get", "List", "Set", "Delete", "Recover", "Backup",
-      "Restore"
-    ]
-
-    certificate_permissions = ["Get", "List", "Update", "Create", "Import",
-      "Delete", "Recover", "Backup", "Restore", "ManageContacts", "ManageIssuers",
-      "GetIssuers", "ListIssuers", "SetIssuers", "DeleteIssuers", "Purge"
-    ]
-  }
-}
-
-data "azurerm_key_vault_secret" "dev_mod_bot_token" {
-  name         = "dev-mod-bot-token"
-  key_vault_id = azurerm_key_vault.keyvalue.id
-}
-
-data "azurerm_key_vault_secret" "prod_mod_bot_token" {
-  name         = "prod-mod-bot-token"
-  key_vault_id = azurerm_key_vault.keyvalue.id
-}
-
-data "azurerm_key_vault_secret" "dev_db_host" {
-  name         = "dev-db-host"
-  key_vault_id = azurerm_key_vault.keyvalue.id
-}
-
-data "azurerm_key_vault_secret" "dev_db_password" {
-  name         = "dev-db-password"
-  key_vault_id = azurerm_key_vault.keyvalue.id
-}
-
-data "azurerm_key_vault_secret" "dev_db_user" {
-  name         = "dev-db-user"
-  key_vault_id = azurerm_key_vault.keyvalue.id
-}
-
-data "azurerm_key_vault_secret" "admin_db_password" {
-  name         = "admin-db-password"
-  key_vault_id = azurerm_key_vault.keyvalue.id
-}
-
-
 data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
@@ -81,11 +7,10 @@ locals {
   elia-ip = "185.178.95.235/32"
 }
 
-
 resource "azurerm_kubernetes_cluster" "k8s" {
   location                          = "westeurope"
   name                              = "aks-polinetwork"
-  resource_group_name               = azurerm_resource_group.rg.name
+  resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
   api_server_authorized_ip_ranges   = [local.elia-ip]
   role_based_access_control_enabled = true
@@ -121,8 +46,8 @@ resource "azurerm_kubernetes_cluster" "k8s" {
 
 resource "azurerm_managed_disk" "storage" {
   name                 = "mg-polinetwork"
-  location             = azurerm_resource_group.rg.location
-  resource_group_name  = azurerm_resource_group.rg.name
+  location             = var.location
+  resource_group_name  = var.rg_name
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
   disk_size_gb         = "1000"
@@ -134,13 +59,14 @@ resource "azurerm_managed_disk" "storage" {
 
 resource "kubernetes_persistent_volume" "storageaks" {
   metadata {
-    name = "storage"
+    name = "mysql-persistent-volume"
   }
   spec {
     capacity = {
       storage = "1000Gi"
     }
-    access_modes = ["ReadWriteOnce"]
+    storage_class_name = "manual"
+    access_modes       = ["ReadWriteOnce"]
     persistent_volume_source {
       azure_disk {
         caching_mode  = "None"
