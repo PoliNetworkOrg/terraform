@@ -25,6 +25,5 @@ variable "object_id" {
 
 variable "allowed_ips" {
   type        = list(string)
-  default     = []
   description = "List of allowed ips"
 }

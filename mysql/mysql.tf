@@ -1,9 +1,17 @@
+resource "kubernetes_namespace" "mysql" {
+  metadata {
+    name = "mysql"
+  }
+}
+
 resource "kubernetes_persistent_volume_claim" "mysql_storage" {
   metadata {
-    name = "mysql-storage-claim"
+    name      = "mysql-storage-claim"
+    namespace = "mysql"
   }
   spec {
-    access_modes = ["ReadWriteOnce"]
+    access_modes       = ["ReadWriteOnce"]
+    storage_class_name = "managed-csi"
     resources {
       requests = {
         storage = "100Gi"

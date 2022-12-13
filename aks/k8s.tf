@@ -1,18 +1,9 @@
-data "http" "myip" {
-  url = "http://ipv4.icanhazip.com"
-}
-
-locals {
-  my_ip   = "${chomp(data.http.myip.response_body)}/32"
-  elia-ip = "185.178.95.235/32"
-}
-
 resource "azurerm_kubernetes_cluster" "k8s" {
   location                          = "westeurope"
   name                              = "aks-polinetwork"
   resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
-  api_server_authorized_ip_ranges   = [local.elia-ip]
+  api_server_authorized_ip_ranges   = var.allowed_ips
   role_based_access_control_enabled = true
 
 
@@ -65,15 +56,18 @@ resource "kubernetes_persistent_volume" "storageaks" {
     capacity = {
       storage = "1000Gi"
     }
-    storage_class_name = "manual"
+    storage_class_name = "managed-csi"
     access_modes       = ["ReadWriteOnce"]
     persistent_volume_source {
-      azure_disk {
-        caching_mode  = "None"
-        data_disk_uri = azurerm_managed_disk.storage.id
-        disk_name     = "storage"
-        kind          = "Managed"
+      host_path {
+        path = "/mnt/data"
       }
+      # azure_disk {
+      #   caching_mode  = "None"
+      #   data_disk_uri = azurerm_managed_disk.storage.id
+      #   disk_name     = "storage"
+      #   kind          = "Managed"
+      # }
     }
   }
 }

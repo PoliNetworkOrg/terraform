@@ -5,15 +5,26 @@ resource "azurerm_resource_group" "rg" {
 
 data "azurerm_client_config" "current" {}
 
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
+locals {
+  my_ip   = "${chomp(data.http.myip.response_body)}/32"
+  elia-ip = "185.178.95.235/32"
+}
+
 module "aks" {
   source = "./aks/"
 
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
+
+  allowed_ips = [local.elia-ip, local.my_ip]
 }
 
 module "argo-cd" {
-  source = "./argo-cd/"
+  source = "./argocd/"
 
   applications = [
     file("./argocd-applications.yaml")
@@ -30,7 +41,7 @@ module "bots" {
   dev_db_password   = data.azurerm_key_vault_secret.dev_db_password.value
   dev_db_user       = data.azurerm_key_vault_secret.dev_db_user.value
 
-  prod_bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
+  prod_bot_token     = data.azurerm_key_vault_secret.prod_mod_bot_token.value
   prod_bot_onMessage = "m"
   prod_db_database   = "polinetwork"
   prod_db_host       = data.azurerm_key_vault_secret.dev_db_host.value
@@ -45,11 +56,11 @@ module "keyvault" {
 
   location = azurerm_resource_group.rg.location
 
-  rg_name = azurerm_resource_group.rg.name
-
+  rg_name   = azurerm_resource_group.rg.name
   tenant_id = data.azurerm_client_config.current.tenant_id
-
   object_id = data.azurerm_client_config.current.object_id
+
+  allowed_ips = [local.elia-ip, local.my_ip]
 }
 
 module "mysql" {
