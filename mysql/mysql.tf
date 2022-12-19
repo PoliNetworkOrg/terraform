@@ -60,6 +60,8 @@ resource "kubernetes_secret" "initdb" {
       db_prod_user     = var.prod_db_user
       db_dev_password  = var.dev_db_password
       db_prod_password = var.prod_db_password
+      db_dev_database  = var.dev_db_database
+      db_prod_database = var.prod_db_database
     })
   }
 }

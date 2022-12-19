@@ -1,8 +1,36 @@
--- RIMUOVI TUTTI GLI UTENTI TRANNE ROOT
+-- DELETE ALL USERS EXCEPT FOR ROOT AND LOCALHOST MYSQL STUFF
 
--- CREA GLI UTENTI
+CREATE TABLE t1 (USER_ VARCHAR(1000), HOST_ VARCHAR(1000));
+
+DELIMITER //
+
+FOR i IN (SELECT User, Host FROM mysql.user WHERE USER != 'root' AND HOST != 'localhost')
+DO
+  INSERT INTO t1 (user_,host_) VALUES (i.user, i.host);
+END FOR;
+
+FOR i IN (SELECT User_, Host_ FROM t1)
+DO
+  EXECUTE IMMEDIATE CONCAT('DROP USER \'',i.User_, '\'@\'',i.Host_,'\';' );
+END FOR;
+
+//
+
+DELIMITER ;
+
+DROP TABLE t1;
+
+
+-- CREATE NEW USERS
 CREATE USER '${db_dev_user}'@'%' IDENTIFIED BY '${db_dev_password}' ;
 CREATE USER '${db_prod_user}'@'%' IDENTIFIED BY '${db_prod_password}' ;
--- DAI I PERMESSI 
 
--- CREA I DATABASE SE NON CI SONO
+
+-- CREATE DATABASES IF NOT ALREADY PRESENT
+
+CREATE IF NOT EXISTS DATABASE '${db_dev_database}’ CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE IF NOT EXISTS DATABASE '${db_prod_database}’ CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+
+-- GIVE PERMISSIONS TO BOTS
+GRANT ALL PRIVILEGES ON ${db_dev_database}.* TO ${db_dev_user}@'%';
+GRANT ALL PRIVILEGES ON ${db_prod_database}.* TO ${db_prod_user}@'%';
