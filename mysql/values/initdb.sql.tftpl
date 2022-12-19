@@ -1,2 +1,8 @@
+-- RIMUOVI TUTTI GLI UTENTI TRANNE ROOT
+
+-- CREA GLI UTENTI
 CREATE USER '${db_dev_user}'@'%' IDENTIFIED BY '${db_dev_password}' ;
 CREATE USER '${db_prod_user}'@'%' IDENTIFIED BY '${db_prod_password}' ;
+-- DAI I PERMESSI 
+
+-- CREA I DATABASE SE NON CI SONO

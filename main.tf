@@ -74,7 +74,7 @@ module "mysql" {
   prod_db_user        = data.azurerm_key_vault_secret.dev_db_user.value
   dev_db_database     = "polinetwork_test"
   prod_db_database    = "polinetwork"
-  mysql_root_password = "ciao"
+  mysql_root_password = data.azurerm_key_vault_secret.admin_db_password.value
 }
 
 
