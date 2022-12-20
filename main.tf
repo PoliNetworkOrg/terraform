@@ -63,18 +63,18 @@ module "keyvault" {
   allowed_ips = [local.elia-ip, local.my_ip]
 }
 
-module "mysql" {
-  source = "./mysql/"
+module "mariadb" {
+  source = "./mariadb/"
 
   persistent_volume_name = module.aks.kubernetes_persistent_volume
 
-  dev_db_password     = data.azurerm_key_vault_secret.dev_db_password.value
-  dev_db_user         = data.azurerm_key_vault_secret.dev_db_user.value
-  prod_db_password    = data.azurerm_key_vault_secret.dev_db_password.value
-  prod_db_user        = data.azurerm_key_vault_secret.dev_db_user.value
-  dev_db_database     = "polinetwork_test"
-  prod_db_database    = "polinetwork"
-  mysql_root_password = data.azurerm_key_vault_secret.admin_db_password.value
+  dev_db_password       = data.azurerm_key_vault_secret.dev_db_password.value
+  dev_db_user           = data.azurerm_key_vault_secret.dev_db_user.value
+  prod_db_password      = data.azurerm_key_vault_secret.dev_db_password.value
+  prod_db_user          = data.azurerm_key_vault_secret.dev_db_user.value
+  dev_db_database       = "polinetwork_test"
+  prod_db_database      = "polinetwork"
+  mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
 }
 
 

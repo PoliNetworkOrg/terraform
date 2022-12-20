@@ -1,11 +1,11 @@
--- DELETE ALL USERS EXCEPT FOR ROOT AND LOCALHOST MYSQL STUFF
+-- DELETE ALL USERS EXCEPT FOR ROOT AND LOCALHOST mariadb STUFF
 CREATE DATABASE temp;
 
 CREATE TABLE temp.t1 (USER_ VARCHAR(1000), HOST_ VARCHAR(1000));
 
 DELIMITER //
 
-FOR i IN (SELECT User, Host FROM mysql.user WHERE USER != 'root' AND HOST != 'localhost')
+FOR i IN (SELECT User, Host FROM mariadb.user WHERE USER != 'root' AND HOST != 'localhost')
 DO
   INSERT INTO temp.t1 (user_,host_) VALUES (i.user, i.host);
 END FOR;
@@ -25,13 +25,13 @@ DROP DATABASE temp;
 
 -- CREATE NEW USERS
 CREATE USER '${db_dev_user}'@'%' IDENTIFIED BY '${db_dev_password}' ;
-CREATE USER '${db_prod_user}'@'%' IDENTIFIED BY '${db_prod_password}' ;
+CREATE USER IF NOT EXISTS '${db_prod_user}'@'%' IDENTIFIED BY '${db_prod_password}' ;
 
 
 -- CREATE DATABASES IF NOT ALREADY PRESENT
 
-CREATE IF NOT EXISTS DATABASE '${db_dev_database}' CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE IF NOT EXISTS DATABASE '${db_prod_database}' CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE DATABASE IF NOT EXISTS ${db_dev_database} CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_general_ci';
+CREATE DATABASE IF NOT EXISTS ${db_prod_database} CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_general_ci';
 
 -- GIVE PERMISSIONS TO BOTS
 GRANT ALL PRIVILEGES ON ${db_dev_database}.* TO '${db_dev_user}'@'%';

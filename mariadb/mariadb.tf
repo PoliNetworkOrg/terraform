@@ -1,13 +1,13 @@
-resource "kubernetes_namespace" "mysql" {
+resource "kubernetes_namespace" "mariadb" {
   metadata {
-    name = "mysql"
+    name = "mariadb"
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "mysql_storage" {
+resource "kubernetes_persistent_volume_claim" "mariadb_storage" {
   metadata {
-    name      = "mysql-storage-claim"
-    namespace = "mysql"
+    name      = "mariadb-storage-claim"
+    namespace = "mariadb"
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -21,14 +21,14 @@ resource "kubernetes_persistent_volume_claim" "mysql_storage" {
   }
 }
 
-resource "kubernetes_service" "mysql_service" {
+resource "kubernetes_service" "mariadb_service" {
   metadata {
-    name      = "mysql"
-    namespace = "mysql"
+    name      = "mariadb"
+    namespace = "mariadb"
   }
   spec {
     selector = {
-      app = "mysql"
+      app = "mariadb"
     }
     port {
       port = 3306
@@ -37,21 +37,21 @@ resource "kubernetes_service" "mysql_service" {
   }
 }
 
-resource "kubernetes_secret" "mysql_admin" {
+resource "kubernetes_secret" "mariadb_admin" {
   metadata {
-    name      = "mysql-secret"
-    namespace = "mysql"
+    name      = "mariadb-secret"
+    namespace = "mariadb"
   }
 
   data = {
-    MYSQL_ROOT_PASSWORD = var.mysql_root_password
+    MARIADB_ROOT_PASSWORD = var.mariadb_root_password
   }
 }
 
 resource "kubernetes_secret" "initdb" {
   metadata {
     name      = "initdb"
-    namespace = "mysql"
+    namespace = "mariadb"
   }
 
   data = {

@@ -50,7 +50,7 @@ resource "azurerm_managed_disk" "storage" {
 
 resource "kubernetes_persistent_volume" "storageaks" {
   metadata {
-    name = "mysql-persistent-volume"
+    name = "mariadb-persistent-volume"
   }
   spec {
     capacity = {

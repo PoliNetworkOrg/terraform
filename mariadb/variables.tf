@@ -34,7 +34,7 @@ variable "prod_db_user" {
   nullable = false
 }
 
-variable "mysql_root_password" {
+variable "mariadb_root_password" {
   type     = string
   nullable = false
 }

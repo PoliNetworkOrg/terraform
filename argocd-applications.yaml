@@ -37,18 +37,18 @@ applications:
     info:
     - name: url
       value: https://argoproj.github.io/
-  - name: mysql
+  - name: mariadb
     namespace: argocd
     project: default
     source:
       repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
       targetRevision: HEAD
-      path: mysql
+      path: mariadb
       directory:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: mysql
+      namespace: mariadb
     syncPolicy:
       automated:
         prune: true
