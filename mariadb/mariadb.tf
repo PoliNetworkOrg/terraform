@@ -33,7 +33,8 @@ resource "kubernetes_service" "mariadb_service" {
     port {
       port = 3306
     }
-    cluster_ip = "None"
+    type       = "ClusterIP"
+    cluster_ip = var.mariadb_internal_ip
   }
 }
 

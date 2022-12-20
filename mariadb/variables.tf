@@ -8,6 +8,11 @@ variable "dev_db_database" {
   nullable = false
 }
 
+variable "mariadb_internal_ip" {
+  type     = string
+  nullable = false
+}
+
 
 variable "dev_db_password" {
   type     = string

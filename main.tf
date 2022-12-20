@@ -10,8 +10,9 @@ data "http" "myip" {
 }
 
 locals {
-  my_ip   = "${chomp(data.http.myip.response_body)}/32"
-  elia-ip = "185.178.95.235/32"
+  my_ip               = "${chomp(data.http.myip.response_body)}/32"
+  elia-ip             = "185.178.95.235/32"
+  mariadb_internal_ip = "10.0.10.10"
 }
 
 module "aks" {
@@ -37,14 +38,14 @@ module "bots" {
   dev_bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
   dev_bot_onMessage = "m"
   dev_db_database   = "polinetwork_test"
-  dev_db_host       = data.azurerm_key_vault_secret.dev_db_host.value
+  dev_db_host       = local.mariadb_internal_ip
   dev_db_password   = data.azurerm_key_vault_secret.dev_db_password.value
   dev_db_user       = data.azurerm_key_vault_secret.dev_db_user.value
 
   prod_bot_token     = data.azurerm_key_vault_secret.prod_mod_bot_token.value
   prod_bot_onMessage = "m"
   prod_db_database   = "polinetwork"
-  prod_db_host       = data.azurerm_key_vault_secret.dev_db_host.value
+  prod_db_host       = local.mariadb_internal_ip
   prod_db_password   = data.azurerm_key_vault_secret.dev_db_password.value
   prod_db_user       = data.azurerm_key_vault_secret.dev_db_user.value
 }
@@ -75,6 +76,7 @@ module "mariadb" {
   dev_db_database       = "polinetwork_test"
   prod_db_database      = "polinetwork"
   mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
+  mariadb_internal_ip   = local.mariadb_internal_ip
 }
 
 
