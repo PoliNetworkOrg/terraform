@@ -1,15 +1,16 @@
 -- DELETE ALL USERS EXCEPT FOR ROOT AND LOCALHOST MYSQL STUFF
+CREATE DATABASE temp;
 
-CREATE TABLE t1 (USER_ VARCHAR(1000), HOST_ VARCHAR(1000));
+CREATE TABLE temp.t1 (USER_ VARCHAR(1000), HOST_ VARCHAR(1000));
 
 DELIMITER //
 
 FOR i IN (SELECT User, Host FROM mysql.user WHERE USER != 'root' AND HOST != 'localhost')
 DO
-  INSERT INTO t1 (user_,host_) VALUES (i.user, i.host);
+  INSERT INTO temp.t1 (user_,host_) VALUES (i.user, i.host);
 END FOR;
 
-FOR i IN (SELECT User_, Host_ FROM t1)
+FOR i IN (SELECT User_, Host_ FROM temp.t1)
 DO
   EXECUTE IMMEDIATE CONCAT('DROP USER \'',i.User_, '\'@\'',i.Host_,'\';' );
 END FOR;
@@ -18,8 +19,9 @@ END FOR;
 
 DELIMITER ;
 
-DROP TABLE t1;
+DROP TABLE temp.t1;
 
+DROP DATABASE temp;
 
 -- CREATE NEW USERS
 CREATE USER '${db_dev_user}'@'%' IDENTIFIED BY '${db_dev_password}' ;
@@ -28,9 +30,9 @@ CREATE USER '${db_prod_user}'@'%' IDENTIFIED BY '${db_prod_password}' ;
 
 -- CREATE DATABASES IF NOT ALREADY PRESENT
 
-CREATE IF NOT EXISTS DATABASE '${db_dev_database}’ CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE IF NOT EXISTS DATABASE '${db_prod_database}’ CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE IF NOT EXISTS DATABASE '${db_dev_database}' CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE IF NOT EXISTS DATABASE '${db_prod_database}' CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- GIVE PERMISSIONS TO BOTS
-GRANT ALL PRIVILEGES ON ${db_dev_database}.* TO ${db_dev_user}@'%';
-GRANT ALL PRIVILEGES ON ${db_prod_database}.* TO ${db_prod_user}@'%';
+GRANT ALL PRIVILEGES ON ${db_dev_database}.* TO '${db_dev_user}'@'%';
+GRANT ALL PRIVILEGES ON ${db_prod_database}.* TO '${db_prod_user}'@'%';
