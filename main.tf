@@ -33,6 +33,10 @@ module "argo-cd" {
 }
 
 module "bots" {
+  depends_on = [
+    module.mariadb
+  ]
+
   source = "./bots/"
 
   dev_bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
@@ -45,7 +49,7 @@ module "bots" {
   prod_bot_token     = data.azurerm_key_vault_secret.prod_mod_bot_token.value
   prod_bot_onMessage = "m"
   prod_db_database   = "polinetwork"
-  prod_db_host       = local.mariadb_internal_ip
+  prod_db_host       = data.azurerm_key_vault_secret.dev_db_host.value
   prod_db_password   = data.azurerm_key_vault_secret.dev_db_password.value
   prod_db_user       = data.azurerm_key_vault_secret.dev_db_user.value
 }
@@ -71,8 +75,8 @@ module "mariadb" {
 
   dev_db_password       = data.azurerm_key_vault_secret.dev_db_password.value
   dev_db_user           = data.azurerm_key_vault_secret.dev_db_user.value
-  prod_db_password      = data.azurerm_key_vault_secret.dev_db_password.value
-  prod_db_user          = data.azurerm_key_vault_secret.dev_db_user.value
+  prod_db_password      = data.azurerm_key_vault_secret.prod_db_password.value
+  prod_db_user          = data.azurerm_key_vault_secret.prod_mod_db_user.value
   dev_db_database       = "polinetwork_test"
   prod_db_database      = "polinetwork"
   mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
@@ -107,6 +111,16 @@ data "azurerm_key_vault_secret" "dev_db_user" {
 
 data "azurerm_key_vault_secret" "admin_db_password" {
   name         = "admin-db-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_db_password" {
+  name         = "prod-db-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_mod_db_user" {
+  name         = "prod-mod-db-user"
   key_vault_id = module.keyvault.key_vault_id
 }
 

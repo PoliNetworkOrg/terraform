@@ -1,11 +1,11 @@
--- DELETE ALL USERS EXCEPT FOR ROOT AND LOCALHOST mariadb STUFF
+-- DELETE ALL USERS EXCEPT FOR ROOT AND LOCALHOST mysql STUFF
 CREATE DATABASE temp;
 
 CREATE TABLE temp.t1 (USER_ VARCHAR(1000), HOST_ VARCHAR(1000));
 
 DELIMITER //
 
-FOR i IN (SELECT User, Host FROM mariadb.user WHERE USER != 'root' AND HOST != 'localhost')
+FOR i IN (SELECT User, Host FROM mysql.user WHERE USER != 'root' AND HOST != 'localhost')
 DO
   INSERT INTO temp.t1 (user_,host_) VALUES (i.user, i.host);
 END FOR;
