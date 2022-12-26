@@ -1,9 +1,9 @@
+# tfsec:ignore:azure-container-limit-authorized-ips
 resource "azurerm_kubernetes_cluster" "k8s" {
   location                          = "westeurope"
   name                              = "aks-polinetwork"
   resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
-  api_server_authorized_ip_ranges   = var.allowed_ips
   role_based_access_control_enabled = true
 
 
