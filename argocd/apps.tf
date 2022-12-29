@@ -4,18 +4,6 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-resource "kubernetes_namespace" "bot-dev" {
-  metadata {
-    name = "bot-dev"
-  }
-}
-
-resource "kubernetes_namespace" "bot-prod" {
-  metadata {
-    name = "bot-prod"
-  }
-}
-
 resource "helm_release" "argo_cd" {
   name       = "argo"
   repository = "https://argoproj.github.io/argo-helm"

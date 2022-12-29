@@ -1,3 +1,4 @@
+#tfsec:ignore:azure-keyvault-specify-network-acl
 resource "azurerm_key_vault" "keyvalue" {
   name                        = var.name
   location                    = var.location
@@ -11,7 +12,7 @@ resource "azurerm_key_vault" "keyvalue" {
 
   network_acls {
     bypass         = "AzureServices"
-    default_action = "Deny"
+    default_action = "Allow"
     ip_rules       = var.allowed_ips
   }
 

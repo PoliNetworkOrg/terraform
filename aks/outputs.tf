@@ -38,7 +38,3 @@ output "cluster_credentials" {
   value     = azurerm_kubernetes_cluster.k8s
   sensitive = true
 }
-
-output "kubernetes_persistent_volume" {
-  value = kubernetes_persistent_volume.storageaks.metadata[0].name
-}

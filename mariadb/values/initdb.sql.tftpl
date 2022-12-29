@@ -26,13 +26,16 @@ DROP DATABASE temp;
 -- CREATE NEW USERS
 CREATE USER '${db_dev_user}'@'%' IDENTIFIED BY '${db_dev_password}' ;
 CREATE USER IF NOT EXISTS '${db_prod_user}'@'%' IDENTIFIED BY '${db_prod_password}' ;
+CREATE USER IF NOT EXISTS '${db_mat_user}'@'%' IDENTIFIED BY '${db_mat_password}' ;
 
 
 -- CREATE DATABASES IF NOT ALREADY PRESENT
 
 CREATE DATABASE IF NOT EXISTS ${db_dev_database} CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_general_ci';
 CREATE DATABASE IF NOT EXISTS ${db_prod_database} CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_general_ci';
+CREATE DATABASE IF NOT EXISTS ${db_mat_database} CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_general_ci';
 
 -- GIVE PERMISSIONS TO BOTS
 GRANT ALL PRIVILEGES ON ${db_dev_database}.* TO '${db_dev_user}'@'%';
 GRANT ALL PRIVILEGES ON ${db_prod_database}.* TO '${db_prod_user}'@'%';
+GRANT ALL PRIVILEGES ON ${db_mat_database}.* TO '${db_mat_user}'@'%';

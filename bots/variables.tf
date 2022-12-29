@@ -1,59 +1,56 @@
-variable "dev_bot_token" {
+variable "bot_token" {
   type     = string
   nullable = false
 }
 
-variable "dev_bot_onMessage" {
+variable "bot_namespace" {
   type     = string
   nullable = false
 }
 
-variable "dev_db_database" {
+variable "bot_onMessage" {
   type     = string
   nullable = false
 }
 
-variable "dev_db_host" {
+variable "db_database" {
   type     = string
   nullable = false
 }
 
-variable "dev_db_password" {
+variable "db_host" {
   type     = string
   nullable = false
 }
 
-variable "dev_db_user" {
+variable "db_password" {
   type     = string
   nullable = false
 }
 
-variable "prod_bot_token" {
+variable "db_user" {
   type     = string
   nullable = false
 }
 
-variable "prod_bot_onMessage" {
-  type     = string
-  nullable = false
+variable "persistent_storage" {
+  type        = bool
+  description = "Volume claim for the bot"
+  default     = false
 }
 
-variable "prod_db_database" {
-  type     = string
-  nullable = false
+variable "persistent_storage_location" {
+  type    = string
+  default = ""
 }
 
-variable "prod_db_host" {
-  type     = string
-  nullable = false
+variable "persistent_storage_rg_name" {
+  type    = string
+  default = ""
 }
 
-variable "prod_db_password" {
-  type     = string
-  nullable = false
-}
-
-variable "prod_db_user" {
-  type     = string
-  nullable = false
+variable "persistent_storage_size_gi" {
+  type        = string
+  description = "Requested storage"
+  default     = ""
 }
