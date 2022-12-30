@@ -10,8 +10,9 @@ data "http" "myip" {
 }
 
 locals {
-  my_ip   = "${chomp(data.http.myip.response_body)}/32"
-  elia-ip = "185.178.95.235/32"
+  my_ip               = "${chomp(data.http.myip.response_body)}/32"
+  elia-ip             = "185.178.95.235/32"
+  mariadb_internal_ip = "10.0.10.10"
 }
 
 module "aks" {
@@ -20,10 +21,13 @@ module "aks" {
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
-  allowed_ips = [local.elia-ip, local.my_ip]
 }
 
 module "argo-cd" {
+  depends_on = [
+    module.aks
+  ]
+
   source = "./argocd/"
 
   applications = [
@@ -31,50 +35,94 @@ module "argo-cd" {
   ]
 }
 
-module "bots" {
+module "bot_mod_dev" {
+  depends_on = [
+    module.mariadb
+  ]
+
   source = "./bots/"
 
-  dev_bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
-  dev_bot_onMessage = "m"
-  dev_db_database   = "polinetwork_test"
-  dev_db_host       = data.azurerm_key_vault_secret.dev_db_host.value
-  dev_db_password   = data.azurerm_key_vault_secret.dev_db_password.value
-  dev_db_user       = data.azurerm_key_vault_secret.dev_db_user.value
-
-  prod_bot_token     = data.azurerm_key_vault_secret.prod_mod_bot_token.value
-  prod_bot_onMessage = "m"
-  prod_db_database   = "polinetwork"
-  prod_db_host       = data.azurerm_key_vault_secret.dev_db_host.value
-  prod_db_password   = data.azurerm_key_vault_secret.dev_db_password.value
-  prod_db_user       = data.azurerm_key_vault_secret.dev_db_user.value
+  bot_namespace = "bot-dev"
+  bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
+  bot_onMessage = "m"
+  db_database   = "polinetwork_test"
+  db_host       = local.mariadb_internal_ip
+  db_password   = data.azurerm_key_vault_secret.dev_db_password.value
+  db_user       = data.azurerm_key_vault_secret.dev_db_user.value
 }
+
+module "bot_mod_prod" {
+  depends_on = [
+    module.mariadb
+  ]
+
+  source = "./bots/"
+
+  bot_namespace = "bot-prod"
+  bot_token     = data.azurerm_key_vault_secret.prod_mod_bot_token.value
+  bot_onMessage = "m"
+  db_database   = "polinetwork"
+  db_host       = local.mariadb_internal_ip
+  db_password   = data.azurerm_key_vault_secret.prod_db_password.value
+  db_user       = data.azurerm_key_vault_secret.prod_mod_db_user.value
+}
+
+module "bot_mat_prod" {
+  depends_on = [
+    module.mariadb
+  ]
+
+  source = "./bots/"
+
+  bot_namespace               = "bot-mat"
+  bot_token                   = data.azurerm_key_vault_secret.prod_bot_mat_token.value
+  bot_onMessage               = "mat"
+  db_database                 = "polinetwork_materials"
+  db_host                     = local.mariadb_internal_ip
+  db_password                 = data.azurerm_key_vault_secret.prod_bot_mat_db_password.value
+  db_user                     = data.azurerm_key_vault_secret.prod_bot_mat_db_user.value
+  persistent_storage          = true
+  persistent_storage_size_gi  = "500"
+  persistent_storage_location = azurerm_resource_group.rg.location
+  persistent_storage_rg_name  = azurerm_resource_group.rg.name
+}
+
 
 module "keyvault" {
   source = "./keyvault/"
 
   name = "kv-polinetwork"
 
-  location = azurerm_resource_group.rg.location
-
+  location  = azurerm_resource_group.rg.location
   rg_name   = azurerm_resource_group.rg.name
   tenant_id = data.azurerm_client_config.current.tenant_id
   object_id = data.azurerm_client_config.current.object_id
 
-  allowed_ips = [local.elia-ip, local.my_ip]
+  allowed_ips = []
 }
 
-module "mysql" {
-  source = "./mysql/"
+module "mariadb" {
+  depends_on = [
+    module.aks,
+    module.argo-cd
+  ]
 
-  persistent_volume_name = module.aks.kubernetes_persistent_volume
+  source = "./mariadb/"
 
-  dev_db_password     = data.azurerm_key_vault_secret.dev_db_password.value
-  dev_db_user         = data.azurerm_key_vault_secret.dev_db_user.value
-  prod_db_password    = data.azurerm_key_vault_secret.dev_db_password.value
-  prod_db_user        = data.azurerm_key_vault_secret.dev_db_user.value
-  dev_db_database     = "polinetwork_test"
-  prod_db_database    = "polinetwork"
-  mysql_root_password = "ciao"
+  dev_db_password       = data.azurerm_key_vault_secret.dev_db_password.value
+  dev_db_user           = data.azurerm_key_vault_secret.dev_db_user.value
+  dev_db_database       = "polinetwork_test"
+  prod_db_password      = data.azurerm_key_vault_secret.prod_db_password.value
+  prod_db_user          = data.azurerm_key_vault_secret.prod_mod_db_user.value
+  prod_db_database      = "polinetwork"
+  mat_db_password       = data.azurerm_key_vault_secret.prod_bot_mat_db_password.value
+  mat_db_user           = data.azurerm_key_vault_secret.prod_bot_mat_db_user.value
+  mat_db_database       = "polinetwork_materials"
+  mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
+  mariadb_internal_ip   = local.mariadb_internal_ip
+
+  location = azurerm_resource_group.rg.location
+  rg_name  = azurerm_resource_group.rg.name
 }
 
 
@@ -107,6 +155,32 @@ data "azurerm_key_vault_secret" "admin_db_password" {
   name         = "admin-db-password"
   key_vault_id = module.keyvault.key_vault_id
 }
+
+data "azurerm_key_vault_secret" "prod_db_password" {
+  name         = "prod-db-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_mod_db_user" {
+  name         = "prod-mod-db-user"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_bot_mat_token" {
+  name         = "prod-bot-mat-token"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_bot_mat_db_password" {
+  name         = "prod-bot-mat-db-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_bot_mat_db_user" {
+  name         = "prod-bot-mat-db-user"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
 
 
 # HOW TO CONFIGURE INFRA

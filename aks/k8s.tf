@@ -1,9 +1,9 @@
+# tfsec:ignore:azure-container-limit-authorized-ips
 resource "azurerm_kubernetes_cluster" "k8s" {
   location                          = "westeurope"
   name                              = "aks-polinetwork"
   resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
-  api_server_authorized_ip_ranges   = var.allowed_ips
   role_based_access_control_enabled = true
 
 
@@ -32,42 +32,5 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     network_policy    = "calico"
     network_plugin    = "kubenet"
     load_balancer_sku = "standard"
-  }
-}
-
-resource "azurerm_managed_disk" "storage" {
-  name                 = "mg-polinetwork"
-  location             = var.location
-  resource_group_name  = var.rg_name
-  storage_account_type = "Standard_LRS"
-  create_option        = "Empty"
-  disk_size_gb         = "1000"
-
-  tags = {
-    environment = "staging"
-  }
-}
-
-resource "kubernetes_persistent_volume" "storageaks" {
-  metadata {
-    name = "mysql-persistent-volume"
-  }
-  spec {
-    capacity = {
-      storage = "1000Gi"
-    }
-    storage_class_name = "managed-csi"
-    access_modes       = ["ReadWriteOnce"]
-    persistent_volume_source {
-      host_path {
-        path = "/mnt/data"
-      }
-      # azure_disk {
-      #   caching_mode  = "None"
-      #   data_disk_uri = azurerm_managed_disk.storage.id
-      #   disk_name     = "storage"
-      #   kind          = "Managed"
-      # }
-    }
   }
 }

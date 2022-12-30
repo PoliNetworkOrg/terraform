@@ -15,6 +15,8 @@ applications:
       automated:
         prune: true
         selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
     info:
     - name: url
       value: https://argoproj.github.io/
@@ -34,25 +36,50 @@ applications:
       automated:
         prune: true
         selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
     info:
     - name: url
       value: https://argoproj.github.io/
-  - name: mysql
+  - name: bot-mat
     namespace: argocd
     project: default
     source:
       repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
       targetRevision: HEAD
-      path: mysql
+      path: bot-mat
       directory:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: mysql
+      namespace: bot-mat
     syncPolicy:
       automated:
         prune: true
         selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
+    info:
+    - name: url
+      value: https://argoproj.github.io/
+  - name: mariadb
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+      targetRevision: HEAD
+      path: mariadb
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: mariadb
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
     info:
     - name: url
       value: https://argoproj.github.io/

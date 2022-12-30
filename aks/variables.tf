@@ -8,11 +8,6 @@ variable "rg_name" {
   nullable = false
 }
 
-variable "allowed_ips" {
-  type        = list(string)
-  description = "List of allowed ips"
-}
-
 # variable "repo_credentials" {
 #   type = list(object({
 #     key           = string,
