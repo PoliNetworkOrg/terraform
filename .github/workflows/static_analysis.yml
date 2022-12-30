@@ -23,5 +23,5 @@ jobs:
           bash .utils/terraform_run_all.sh init local
       - name: run_test
         run: |
-          TAG=v1.76.0
+          TAG=v1.77.0
           docker run -v $(pwd):/lint -w /lint ghcr.io/antonbabenko/pre-commit-terraform:$TAG run -a
