@@ -98,7 +98,7 @@ module "keyvault" {
   tenant_id = data.azurerm_client_config.current.tenant_id
   object_id = data.azurerm_client_config.current.object_id
 
-  allowed_ips = [local.elia-ip, local.my_ip]
+  allowed_ips = []
 }
 
 module "mariadb" {
@@ -117,7 +117,7 @@ module "mariadb" {
   prod_db_database      = "polinetwork"
   mat_db_password       = data.azurerm_key_vault_secret.prod_bot_mat_db_password.value
   mat_db_user           = data.azurerm_key_vault_secret.prod_bot_mat_db_user.value
-  mat_db_database       = "polinetwork_material"
+  mat_db_database       = "polinetwork_materials"
   mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
   mariadb_internal_ip   = local.mariadb_internal_ip
 
