@@ -65,6 +65,14 @@ module "bot_mod_prod" {
   db_host       = local.mariadb_internal_ip
   db_password   = data.azurerm_key_vault_secret.prod_db_password.value
   db_user       = data.azurerm_key_vault_secret.prod_mod_db_user.value
+
+  # git_config = true
+  # git_user = "PoliNetworkDev"
+  # git_email = data.azurerm_key_vault_secret.dev_mod_git_email.value
+  # git_password = data.azurerm_key_vault_secret.dev_bot_mat_git_password.value
+  # git_data_repo = "github.com/PoliNetworkDev/polinetworkWebsiteData.git"
+  # git_remote_repo = "github.com/PoliNetworkOrg/polinetworkWebsiteData.git"
+  # git_path = "./data/polinetworkWebsiteData/"
 }
 
 module "bot_mat_prod" {
@@ -86,13 +94,9 @@ module "bot_mat_prod" {
   persistent_storage_location = azurerm_resource_group.rg.location
   persistent_storage_rg_name  = azurerm_resource_group.rg.name
 
-  # git_config = true
-  # git_user = "PoliNetworkDev"
-  # git_email = data.azurerm_key_vault_secret.dev_mod_git_email.value
-  # git_password = data.azurerm_key_vault_secret.dev_bot_mat_git_password.value
-  # git_data_repo = "github.com/PoliNetworkDev/polinetworkWebsiteData.git"
-  # git_remote_repo = "github.com/PoliNetworkOrg/polinetworkWebsiteData.git"
-  # git_path = "./data/polinetworkWebsiteData/"
+  material_password = data.azurerm_key_vault_secret.dev_mat_config_password.value
+  material_root_dir = "/Repos"
+  material_config   = true
 }
 
 
@@ -142,6 +146,11 @@ module "mariadb" {
 #   name         = "dev-bot-mat-git-password"
 #   key_vault_id = module.keyvault.key_vault_id
 # }
+
+data "azurerm_key_vault_secret" "dev_mat_config_password" {
+  name         = "dev-mat-config-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
 
 data "azurerm_key_vault_secret" "dev_mod_bot_token" {
   name         = "dev-mod-bot-token"

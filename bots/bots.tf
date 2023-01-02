@@ -115,3 +115,18 @@ resource "kubernetes_secret" "git_config" {
     })
   }
 }
+
+resource "kubernetes_secret" "material_config" {
+  count = var.material_config ? 1 : 0
+  metadata {
+    name      = "materialbot-config"
+    namespace = var.bot_namespace
+  }
+
+  data = {
+    "materialbotconfig.json" = jsonencode({
+      Password = var.material_password,
+      RootDir  = var.material_root_dir,
+    })
+  }
+}
