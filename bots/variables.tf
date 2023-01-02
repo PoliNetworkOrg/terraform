@@ -54,3 +54,42 @@ variable "persistent_storage_size_gi" {
   description = "Requested storage"
   default     = ""
 }
+
+variable "git_user" {
+  type      = string
+  sensitive = false
+  default   = ""
+}
+
+variable "git_email" {
+  type      = string
+  sensitive = false
+  default   = ""
+}
+variable "git_password" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+variable "git_data_repo" {
+  type      = string
+  sensitive = false
+  default   = ""
+}
+variable "git_remote_repo" {
+  type      = string
+  sensitive = false
+  default   = ""
+}
+
+variable "git_path" {
+  type      = string
+  sensitive = false
+  default   = "/Repos"
+}
+
+variable "git_config" {
+  type      = bool
+  sensitive = false
+  default   = false
+}
