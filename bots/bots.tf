@@ -96,3 +96,22 @@ resource "kubernetes_persistent_volume_claim" "storage_pvc" {
     volume_name = kubernetes_persistent_volume.storage[0].metadata[0].name
   }
 }
+
+resource "kubernetes_secret" "git_config" {
+  count = var.git_config ? 1 : 0
+  metadata {
+    name      = "git-config"
+    namespace = var.bot_namespace
+  }
+
+  data = {
+    "git_info.json" = jsonencode({
+      user        = var.git_user,
+      email       = var.git_email,
+      password    = var.git_password,
+      data_repo   = var.git_data_repo,
+      remote_repo = var.git_remote_repo,
+      path        = var.git_path
+    })
+  }
+}
