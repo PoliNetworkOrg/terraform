@@ -93,3 +93,21 @@ variable "git_config" {
   sensitive = false
   default   = false
 }
+
+variable "material_config" {
+  type      = bool
+  sensitive = false
+  default   = false
+}
+
+variable "material_password" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "material_root_dir" {
+  type      = string
+  sensitive = false
+  default   = ""
+}
