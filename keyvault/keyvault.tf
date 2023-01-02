@@ -18,7 +18,7 @@ resource "azurerm_key_vault" "keyvalue" {
 
   access_policy = [{
     tenant_id = var.tenant_id
-    object_id = var.object_id
+    object_id = "6b6a6388-c024-450b-80b4-9dcfa474c9f0"
 
     key_permissions = ["Get", "List", "Update", "Create", "Import", "Delete",
       "Recover", "Backup", "Restore"
