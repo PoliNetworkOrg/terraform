@@ -94,12 +94,6 @@ variable "git_config" {
   default   = false
 }
 
-variable "material_config" {
-  type      = bool
-  sensitive = false
-  default   = false
-}
-
 variable "material_password" {
   type      = string
   sensitive = true

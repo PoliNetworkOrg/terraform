@@ -41,6 +41,10 @@ resource "kubernetes_secret" "bot_secret" {
       Port     = 3306,
       User     = var.db_user
     })
+    "materialbotconfig.json" = jsonencode({
+      Password = var.material_password,
+      RootDir  = var.material_root_dir,
+    })
   }
 }
 
@@ -112,21 +116,6 @@ resource "kubernetes_secret" "git_config" {
       data_repo   = var.git_data_repo,
       remote_repo = var.git_remote_repo,
       path        = var.git_path
-    })
-  }
-}
-
-resource "kubernetes_secret" "material_config" {
-  count = var.material_config ? 1 : 0
-  metadata {
-    name      = "materialbot-config"
-    namespace = var.bot_namespace
-  }
-
-  data = {
-    "materialbotconfig.json" = jsonencode({
-      Password = var.material_password,
-      RootDir  = var.material_root_dir,
     })
   }
 }
