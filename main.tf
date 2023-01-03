@@ -95,8 +95,7 @@ module "bot_mat_prod" {
   persistent_storage_rg_name  = azurerm_resource_group.rg.name
 
   material_password = data.azurerm_key_vault_secret.dev_mat_config_password.value
-  material_root_dir = "/Repos"
-  material_config   = true
+  material_root_dir = "/Repos/"
 }
 
 
