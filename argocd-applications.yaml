@@ -104,3 +104,24 @@ applications:
     info:
     - name: url
       value: https://argoproj.github.io/
+  - name: app-dev
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+      targetRevision: HEAD
+      path: app-dev
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: app-dev
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
+    info:
+    - name: url
+      value: https://argoproj.github.io/
