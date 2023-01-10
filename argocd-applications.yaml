@@ -5,7 +5,7 @@ applications:
     source:
       repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
       targetRevision: HEAD
-      path: dev
+      path: bot-dev
       directory:
         recurse: true
     destination:
@@ -26,7 +26,7 @@ applications:
     source:
       repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
       targetRevision: HEAD
-      path: prod
+      path: bot-prod
       directory:
         recurse: true
     destination:
