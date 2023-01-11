@@ -35,6 +35,21 @@ module "argo-cd" {
   ]
 }
 
+module "app_dev" {
+  depends_on = [
+    module.mariadb
+  ]
+
+  source = "./app/"
+
+  app_namespace    = "app-dev"
+  app_secret_token = data.azurerm_key_vault_secret.dev_app_secret_token.value
+  db_database      = "polinetwork_app_dev"
+  db_host          = local.mariadb_internal_ip
+  db_password      = data.azurerm_key_vault_secret.dev_db_password.value
+  db_user          = data.azurerm_key_vault_secret.dev_db_user.value
+}
+
 module "bot_mod_dev" {
   depends_on = [
     module.mariadb
@@ -120,15 +135,29 @@ module "mariadb" {
 
   source = "./mariadb/"
 
-  dev_db_password       = data.azurerm_key_vault_secret.dev_db_password.value
-  dev_db_user           = data.azurerm_key_vault_secret.dev_db_user.value
-  dev_db_database       = "polinetwork_test"
-  prod_db_password      = data.azurerm_key_vault_secret.prod_db_password.value
-  prod_db_user          = data.azurerm_key_vault_secret.prod_mod_db_user.value
-  prod_db_database      = "polinetwork"
-  mat_db_password       = data.azurerm_key_vault_secret.prod_bot_mat_db_password.value
-  mat_db_user           = data.azurerm_key_vault_secret.prod_bot_mat_db_user.value
-  mat_db_database       = "polinetwork_materials"
+  db_config = [
+    {
+      password = data.azurerm_key_vault_secret.dev_db_password.value
+      user     = data.azurerm_key_vault_secret.dev_db_user.value
+      database = "polinetwork_test"
+    },
+    {
+      password = data.azurerm_key_vault_secret.prod_bot_mat_db_password.value
+      user     = data.azurerm_key_vault_secret.prod_bot_mat_db_user.value
+      database = "polinetwork_materials"
+    },
+    {
+      password = data.azurerm_key_vault_secret.prod_db_password.value
+      user     = data.azurerm_key_vault_secret.prod_mod_db_user.value
+      database = "polinetwork"
+    },
+    {
+      user     = data.azurerm_key_vault_secret.dev_db_user.value
+      password = data.azurerm_key_vault_secret.dev_db_password.value
+      database = "polinetwork_app_dev"
+    }
+  ]
+
   mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
   mariadb_internal_ip   = local.mariadb_internal_ip
 
@@ -145,6 +174,11 @@ module "mariadb" {
 #   name         = "dev-bot-mat-git-password"
 #   key_vault_id = module.keyvault.key_vault_id
 # }
+
+data "azurerm_key_vault_secret" "dev_app_secret_token" {
+  name         = "dev-app-secret-token"
+  key_vault_id = module.keyvault.key_vault_id
+}
 
 data "azurerm_key_vault_secret" "dev_mat_config_password" {
   name         = "dev-mat-config-password"
