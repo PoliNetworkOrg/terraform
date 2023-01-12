@@ -34,3 +34,22 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     load_balancer_sku = "standard"
   }
 }
+
+resource "helm_release" "ingress-nginx" {
+  name       = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress"
+
+  cleanup_on_fail  = true
+  create_namespace = true
+
+  values = [
+    templatefile("${path.module}/values/ingress.yaml.tftpl", {
+    })
+  ]
+
+  depends_on = [
+    azurerm_kubernetes_cluster.k8s
+  ]
+}
