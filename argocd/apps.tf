@@ -36,3 +36,42 @@ resource "helm_release" "argocd_apps" {
     helm_release.argo_cd
   ]
 }
+
+resource "kubernetes_ingress" "argocd_ingress" {
+  metadata {
+    name = "argocd-ingress"
+  }
+
+  spec {
+    backend {
+      service_name = "argo-argocd-server"
+      service_port = 80
+    }
+
+    rule {
+      http {
+        path {
+          backend {
+            service_name = "myapp-1"
+            service_port = 8080
+          }
+
+          path = "/app1/*"
+        }
+
+        path {
+          backend {
+            service_name = "myapp-2"
+            service_port = 8080
+          }
+
+          path = "/app2/*"
+        }
+      }
+    }
+
+    tls {
+      secret_name = "tls-secret"
+    }
+  }
+}
