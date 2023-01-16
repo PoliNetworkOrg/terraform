@@ -106,3 +106,42 @@ resource "kubernetes_persistent_volume_claim" "mariadb_storage" {
     volume_name = kubernetes_persistent_volume.storageaks.metadata[0].name
   }
 }
+
+resource "kubernetes_role" "db_dev" {
+  metadata {
+    name = "DBDev"
+    labels = {
+      group = "DBDev"
+    }
+    namespace = "mariadb"
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods"]
+    verbs      = ["get", "list"]
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods/portforward"]
+    verbs      = ["create"]
+  }
+}
+
+resource "kubernetes_role_binding" "app_dev" {
+  metadata {
+    name      = "db-dev-bind"
+    namespace = "mariadb"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = "DBDev"
+  }
+  subject {
+    kind      = "Group"
+    name      = "d3976e40-3935-4cbb-933c-7ec7bb2f357a"
+    api_group = "rbac.authorization.k8s.io"
+  }
+}

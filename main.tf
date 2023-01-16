@@ -155,6 +155,11 @@ module "mariadb" {
       user     = data.azurerm_key_vault_secret.dev_db_user.value
       password = data.azurerm_key_vault_secret.dev_db_password.value
       database = "polinetwork_app_dev"
+    },
+    {
+      user     = data.azurerm_key_vault_secret.dev_app_admin_db_user.value
+      password = data.azurerm_key_vault_secret.dev_app_admin_db_password.value
+      database = "polinetwork_app_dev"
     }
   ]
 
@@ -174,6 +179,16 @@ module "mariadb" {
 #   name         = "dev-bot-mat-git-password"
 #   key_vault_id = module.keyvault.key_vault_id
 # }
+
+data "azurerm_key_vault_secret" "dev_app_admin_db_user" {
+  name         = "dev-app-admin-db-user"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "dev_app_admin_db_password" {
+  name         = "dev-app-admin-db-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
 
 data "azurerm_key_vault_secret" "dev_app_secret_token" {
   name         = "dev-app-secret-token"
@@ -251,5 +266,5 @@ data "azurerm_key_vault_secret" "prod_bot_mat_db_user" {
 # az keyvault create --name kv-NAME --resource-group GROUP --location "westeurope"
 # - Configure kubectl
 # az aks get-credentials --resource-group GROUP --name CLUSTER_NAME
-# - Configure KUBE_CONFIG_PATH for kubectl
-# export KUBE_CONFIG_PATH="~/.kube/config"
+# - Configure kube_admin_config_PATH for kubectl
+# export kube_admin_config_PATH="~/.kube/config"

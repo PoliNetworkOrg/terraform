@@ -19,3 +19,15 @@ server:
     limits:
       cpu: "500m"
       memory: "1000Mi"
+  # ingress:
+  #   enabled: true
+  #   ingressClassName: "nginx"
+  #   annotations:
+  #     "ingress.kubernetes.io/rewrite-target": "/argocd" 
+  #     "cert-manager.io/cluster-issuer": "letsencrypt-prod"
+  #   tls:
+  #   - hosts:
+  #     - argo-argocd-server
+  #     secretName: "cert-manager-private-key"
+  #   paths: "/argocd/"
+
