@@ -39,10 +39,6 @@ function terraform_init(){
     rm -rf "$folder/.terraform"
     rm -rf "$folder/.terraform.lock.hcl"
 
-    if grep -rnw $folder -e "azurerm"; then
-      cp ".utils/features.tf" "$folder/ignore_features.tf"
-    fi
-
     cd "$folder" || exit
 
     case "${MODE}" in
