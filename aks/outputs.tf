@@ -28,7 +28,6 @@ output "host" {
   sensitive = true
 }
 
-
 output "kube_admin_config" {
   value     = azurerm_kubernetes_cluster.k8s.kube_admin_config_raw
   sensitive = true
@@ -37,4 +36,12 @@ output "kube_admin_config" {
 output "cluster_credentials" {
   value     = azurerm_kubernetes_cluster.k8s
   sensitive = true
+}
+
+output "aks_name" {
+  value = azurerm_kubernetes_cluster.k8s.name
+}
+
+output "aks_resource_group_name" {
+  value = azurerm_kubernetes_cluster.k8s.resource_group_name
 }

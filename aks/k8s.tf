@@ -134,8 +134,10 @@ resource "azurerm_role_definition" "aks_reader" {
   description = "This is a custom role created via Terraform"
 
   permissions {
-    actions = ["Microsoft.ContainerService/managedClusters/accessProfiles/listCredential/action",
-    "Microsoft.ContainerService/managedClusters/listClusterUserCredential/action"]
+    actions = [
+      "Microsoft.ContainerService/managedClusters/accessProfiles/listCredential/action",
+      "Microsoft.ContainerService/managedClusters/listClusterUserCredential/action"
+    ]
     not_actions = []
   }
 
