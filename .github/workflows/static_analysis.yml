@@ -20,7 +20,7 @@ jobs:
       - name: run_init
         run: |
           terraform init
-          bash .utils/terraform_run_all.sh init local
+        # bash .utils/terraform_run_all.sh init local
       - name: run_test
         run: |
           TAG=v1.77.0

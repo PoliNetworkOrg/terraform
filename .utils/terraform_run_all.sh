@@ -61,6 +61,7 @@ function terraform_init(){
 }
 
 for folder in *; do
+  echo "running in ${folder}"
   terraform_init "${folder}" &
 
   # Add the PID of this background job to the array.
