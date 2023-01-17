@@ -6,11 +6,11 @@ resource "kubernetes_secret" "app_secret" {
 
   data = {
     "dbconfig.json" = jsonencode({
-      Database = var.db_database,
-      Host     = var.db_host,
-      Password = var.db_password,
-      Port     = 3306,
-      User     = var.db_user
+      DatabaseName = var.db_database,
+      Host         = var.db_host,
+      Password     = var.db_password,
+      Port         = 3306,
+      User         = var.db_user
     })
     "secrets.json" = jsonencode({
       Azure = var.app_secret_token,

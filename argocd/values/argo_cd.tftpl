@@ -22,12 +22,12 @@ server:
   # ingress:
   #   enabled: true
   #   ingressClassName: "nginx"
+  #   hosts: ["aks.polinetwork.org"]
   #   annotations:
-  #     "ingress.kubernetes.io/rewrite-target": "/argocd" 
   #     "cert-manager.io/cluster-issuer": "letsencrypt-prod"
   #   tls:
   #   - hosts:
-  #     - argo-argocd-server
+  #     - "aks.polinetwork.org"
   #     secretName: "cert-manager-private-key"
-  #   paths: "/argocd/"
+  #   paths: ["/argocd/"]
 
