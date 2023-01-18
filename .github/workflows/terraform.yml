@@ -26,7 +26,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     - name: 'Setup .kube'
-      uses: |
+      run: |
         az aks get-credentials --resource-group rg-polinetwork --name aks-polinetwork --admin --overwrite-existing || true
 
     - uses: hashicorp/setup-terraform@v2
