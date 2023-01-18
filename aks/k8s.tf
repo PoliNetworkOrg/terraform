@@ -11,6 +11,9 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   azure_active_directory_role_based_access_control {
     managed            = true
     azure_rbac_enabled = true
+    admin_group_object_ids = [
+      "57561933-3873-400d-be92-cdad68d57c1f",
+    ]
   }
 
 
@@ -124,6 +127,11 @@ resource "kubernetes_cluster_role_binding" "adminorg" {
   subject {
     kind      = "User"
     name      = "adminorg@polinetwork.org"
+    api_group = "rbac.authorization.k8s.io"
+  }
+  subject {
+    kind      = "User"
+    name      = "57561933-3873-400d-be92-cdad68d57c1f"
     api_group = "rbac.authorization.k8s.io"
   }
 }

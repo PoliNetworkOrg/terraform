@@ -29,7 +29,7 @@ resource "kubernetes_role" "app_dev" {
 
   rule {
     api_groups = [""]
-    resources  = ["pods"]
+    resources  = ["pods", "pods/log"]
     verbs      = ["get", "list"]
   }
 
