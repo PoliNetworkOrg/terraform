@@ -6,6 +6,7 @@ on:
       - main
   pull_request:
 
+
 jobs:
   terraform:
     name: "Terraform"
@@ -17,6 +18,16 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     steps:
     - uses: actions/checkout@v3
+    
+    - name: Log in with Azure
+      uses: azure/login@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+
+    - name: 'Setup .kube'
+      run: |
+        az aks get-credentials --resource-group rg-polinetwork --name aks-polinetwork --admin --overwrite-existing || true
+
     - uses: hashicorp/setup-terraform@v2
       with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}

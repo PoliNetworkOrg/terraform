@@ -5,11 +5,12 @@ resource "kubernetes_namespace" "argocd" {
 }
 
 resource "helm_release" "argo_cd" {
-  name       = "argo"
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
-  version    = "5.16.3"
-  namespace  = var.namespace
+  name              = "argo"
+  repository        = "https://argoproj.github.io/argo-helm"
+  chart             = "argo-cd"
+  version           = "5.17.1"
+  namespace         = var.namespace
+  dependency_update = true
 
   cleanup_on_fail  = true
   create_namespace = true

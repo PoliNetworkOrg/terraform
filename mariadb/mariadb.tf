@@ -40,15 +40,20 @@ resource "kubernetes_secret" "initdb" {
 
   data = {
     "initdb.sql" = templatefile("${path.module}/values/initdb.sql.tftpl", {
-      db_dev_user      = var.dev_db_user
-      db_prod_user     = var.prod_db_user
-      db_mat_user      = var.mat_db_user
-      db_dev_password  = var.dev_db_password
-      db_prod_password = var.prod_db_password
-      db_mat_password  = var.mat_db_password
-      db_dev_database  = var.dev_db_database
-      db_prod_database = var.prod_db_database
-      db_mat_database  = var.mat_db_database
+      db_config = var.db_config
+    })
+  }
+}
+
+resource "kubernetes_config_map" "initdb" {
+  metadata {
+    name      = "scripts"
+    namespace = "mariadb"
+  }
+
+  data = {
+    "startup.sh" = templatefile("${path.module}/script/startup.sh.tftpl", {
+      db_admin_password = var.mariadb_root_password
     })
   }
 }
@@ -99,5 +104,44 @@ resource "kubernetes_persistent_volume_claim" "mariadb_storage" {
       }
     }
     volume_name = kubernetes_persistent_volume.storageaks.metadata[0].name
+  }
+}
+
+resource "kubernetes_role" "db_dev" {
+  metadata {
+    name = "DBDev"
+    labels = {
+      group = "DBDev"
+    }
+    namespace = "mariadb"
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods"]
+    verbs      = ["get", "list"]
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods/portforward"]
+    verbs      = ["create"]
+  }
+}
+
+resource "kubernetes_role_binding" "app_dev" {
+  metadata {
+    name      = "db-dev-bind"
+    namespace = "mariadb"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = "DBDev"
+  }
+  subject {
+    kind      = "Group"
+    name      = "d3976e40-3935-4cbb-933c-7ec7bb2f357a"
+    api_group = "rbac.authorization.k8s.io"
   }
 }

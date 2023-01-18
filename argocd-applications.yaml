@@ -16,7 +16,7 @@ applications:
         prune: true
         selfHeal: true
       syncOptions:
-        - CreateNamespace=true
+        - CreateNamespace=false
     info:
     - name: url
       value: https://argoproj.github.io/
@@ -37,7 +37,7 @@ applications:
         prune: true
         selfHeal: true
       syncOptions:
-        - CreateNamespace=true
+        - CreateNamespace=false
     info:
     - name: url
       value: https://argoproj.github.io/
@@ -58,7 +58,7 @@ applications:
         prune: true
         selfHeal: true
       syncOptions:
-        - CreateNamespace=true
+        - CreateNamespace=false
     info:
     - name: url
       value: https://argoproj.github.io/
@@ -79,7 +79,7 @@ applications:
         prune: true
         selfHeal: true
       syncOptions:
-        - CreateNamespace=true
+        - CreateNamespace=false
     info:
     - name: url
       value: https://argoproj.github.io/
@@ -121,7 +121,7 @@ applications:
         prune: true
         selfHeal: true
       syncOptions:
-        - CreateNamespace=true
+        - CreateNamespace=false
     info:
     - name: url
-      value: https://argoproj.github.io/ 
+      value: https://argoproj.github.io/

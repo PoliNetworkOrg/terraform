@@ -1,3 +1,6 @@
+data "azurerm_subscription" "primary" {
+}
+
 # tfsec:ignore:azure-container-limit-authorized-ips
 resource "azurerm_kubernetes_cluster" "k8s" {
   location                          = "westeurope"
@@ -5,6 +8,13 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
   role_based_access_control_enabled = true
+  azure_active_directory_role_based_access_control {
+    managed            = true
+    azure_rbac_enabled = true
+    admin_group_object_ids = [
+      "57561933-3873-400d-be92-cdad68d57c1f",
+    ]
+  }
 
 
   tags = {
@@ -34,3 +44,135 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     load_balancer_sku = "standard"
   }
 }
+
+resource "kubernetes_namespace" "argocd" {
+  metadata {
+    name = "nginx-ingress"
+  }
+}
+
+resource "helm_release" "ingress-nginx" {
+  name       = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "nginx-ingress"
+
+  cleanup_on_fail  = true
+  create_namespace = true
+
+  values = [
+    templatefile("${path.module}/values/ingress.yaml.tftpl", {
+    })
+  ]
+
+  depends_on = [
+    azurerm_kubernetes_cluster.k8s
+  ]
+}
+
+resource "kubernetes_namespace" "cert_manager" {
+  metadata {
+    name = "cert-manager"
+  }
+}
+
+
+resource "helm_release" "cert-manager-controller" {
+  name       = "jetstack"
+  repository = "https://charts.jetstack.io"
+  chart      = "cert-manager"
+  version    = "v1.11.0"
+
+  cleanup_on_fail  = true
+  create_namespace = true
+
+  depends_on = [
+    azurerm_kubernetes_cluster.k8s
+  ]
+}
+
+module "cert_manager" {
+  source  = "terraform-iaac/cert-manager/kubernetes"
+  version = "2.4.2"
+
+  cluster_issuer_server                  = "https://acme-v02.api.letsencrypt.org/directory"
+  cluster_issuer_email                   = "adminorg@polinetwork.org"
+  cluster_issuer_name                    = "letsencrypt-prod"
+  cluster_issuer_private_key_secret_name = "letsencrypt-prod"
+  create_namespace                       = false
+  solvers = [
+    {
+      http01 = {
+        ingress = {
+          class = "nginx"
+        }
+      }
+    }
+  ]
+  depends_on = [
+    helm_release.cert-manager-controller
+  ]
+}
+
+
+resource "kubernetes_cluster_role_binding" "adminorg" {
+  metadata {
+    name = "admin-global"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "cluster-admin"
+  }
+  subject {
+    kind      = "User"
+    name      = "adminorg@polinetwork.org"
+    api_group = "rbac.authorization.k8s.io"
+  }
+  subject {
+    kind      = "User"
+    name      = "57561933-3873-400d-be92-cdad68d57c1f"
+    api_group = "rbac.authorization.k8s.io"
+  }
+}
+
+resource "azurerm_role_definition" "aks_reader" {
+  name        = "aks_reader"
+  scope       = data.azurerm_subscription.primary.id
+  description = "This is a custom role created via Terraform"
+
+  permissions {
+    actions = [
+      "Microsoft.ContainerService/managedClusters/accessProfiles/listCredential/action",
+      "Microsoft.ContainerService/managedClusters/listClusterUserCredential/action"
+    ]
+    not_actions = []
+  }
+
+  assignable_scopes = [
+    data.azurerm_subscription.primary.id
+  ]
+}
+
+
+# module "cert_manager_prod" {
+#   source  = "terraform-iaac/cert-manager/kubernetes"
+#   version = "2.4.2"
+
+#   cluster_issuer_server                  = "https://acme-v02.api.letsencrypt.org/directory"
+#   cluster_issuer_email                   = "adminorg@polinetwork.org"
+#   cluster_issuer_name                    = "letsencrypt-prod"
+#   cluster_issuer_private_key_secret_name = "letsencrypt-prod"
+#   create_namespace                       = false
+#   solvers = [
+#     {
+#       http01 = {
+#         ingress = {
+#           class = "nginx"
+#         }
+#       }
+#     }
+#   ]
+# }
+
+

@@ -39,10 +39,6 @@ function terraform_init(){
     rm -rf "$folder/.terraform"
     rm -rf "$folder/.terraform.lock.hcl"
 
-    if grep -rnw $folder -e "azurerm"; then
-      cp ".utils/features.tf" "$folder/ignore_features.tf"
-    fi
-
     cd "$folder" || exit
 
     case "${MODE}" in
@@ -61,6 +57,7 @@ function terraform_init(){
 }
 
 for folder in *; do
+  echo "running in ${folder}"
   terraform_init "${folder}" &
 
   # Add the PID of this background job to the array.
