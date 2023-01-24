@@ -18,8 +18,8 @@ locals {
 module "aks" {
   source = "./aks/"
 
-  ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key
-  ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt
+  ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key.value
+  ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt.value
 
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
@@ -32,8 +32,8 @@ module "argo-cd" {
   ]
 
   source       = "./argocd/"
-  clientId     = data.azurerm_key_vault_secret.argocd_client_id
-  clientSecret = data.azurerm_key_vault_secret.argocd_client_secret
+  clientId     = data.azurerm_key_vault_secret.argocd_client_id.value
+  clientSecret = data.azurerm_key_vault_secret.argocd_client_secret.value
   tenant       = data.azurerm_client_config.current.tenant_id
 
   applications = [

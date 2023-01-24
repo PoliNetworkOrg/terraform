@@ -9,13 +9,11 @@ variable "rg_name" {
 }
 
 variable "ca_tls_crt" {
-  type     = string
-  nullable = false
+  type = string
 }
 
 variable "ca_tls_key" {
-  type     = string
-  nullable = false
+  type = string
 }
 
 
