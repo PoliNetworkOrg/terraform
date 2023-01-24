@@ -8,6 +8,17 @@ variable "rg_name" {
   nullable = false
 }
 
+variable "ca_tls_crt" {
+  type     = string
+  nullable = false
+}
+
+variable "ca_tls_key" {
+  type     = string
+  nullable = false
+}
+
+
 # variable "repo_credentials" {
 #   type = list(object({
 #     key           = string,

@@ -18,6 +18,9 @@ locals {
 module "aks" {
   source = "./aks/"
 
+  ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key
+  ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt
+
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
@@ -28,7 +31,10 @@ module "argo-cd" {
     module.aks
   ]
 
-  source = "./argocd/"
+  source       = "./argocd/"
+  clientId     = data.azurerm_key_vault_secret.argocd_client_id
+  clientSecret = data.azurerm_key_vault_secret.argocd_client_secret
+  tenant       = data.azurerm_client_config.current.tenant_id
 
   applications = [
     file("./argocd-applications.yaml")
@@ -179,6 +185,26 @@ module "mariadb" {
 #   name         = "dev-bot-mat-git-password"
 #   key_vault_id = module.keyvault.key_vault_id
 # }
+
+data "azurerm_key_vault_secret" "ca_tls_crt" {
+  name         = "ca-crt"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "ca_tls_key" {
+  name         = "ca-key"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "argocd_client_secret" {
+  name         = "argocd-client-secret"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "argocd_client_id" {
+  name         = "argocd-client-id"
+  key_vault_id = module.keyvault.key_vault_id
+}
 
 data "azurerm_key_vault_secret" "dev_app_admin_db_user" {
   name         = "dev-app-admin-db-user"

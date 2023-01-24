@@ -17,3 +17,7 @@ repos:
         args:
           - --args=-json
           - --args=-no-color
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.15.3
+    hooks:
+      - id: gitleaks
