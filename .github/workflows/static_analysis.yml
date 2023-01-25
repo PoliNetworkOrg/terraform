@@ -27,5 +27,5 @@ jobs:
       - name: run_test
         run: |
           sudo apt install -y pre-commit gnupg software-properties-common
-          sudo snap install terraform
+          sudo snap install terraform --classic
           pre-commit run -a
