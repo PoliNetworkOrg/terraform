@@ -30,4 +30,7 @@ jobs:
           sudo snap install terraform --classic
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
           go install github.com/terraform-docs/terraform-docs@v0.16.0
+          go install github.com/aquasecurity/tfsec/cmd/tfsec@latest
+          export GOPATH=$HOME/go
+          export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
           pre-commit run -a
