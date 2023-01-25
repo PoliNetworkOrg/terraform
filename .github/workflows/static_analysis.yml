@@ -26,5 +26,5 @@ jobs:
           bash .utils/terraform_run_all.sh init local
       - name: run_test
         run: |
-          pip install pre-commit
+          sudo apt install pre-commit -y
           pre-commit run -a
