@@ -1,6 +1,8 @@
 name: Static Analysis Pre-Commit
 
-on: [ push ]
+on:
+  push:
+  workflow_dispatch:
 
 jobs:
   static_analysis:
