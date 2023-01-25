@@ -28,4 +28,6 @@ jobs:
         run: |
           sudo apt install -y pre-commit gnupg software-properties-common
           sudo snap install terraform --classic
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          go install github.com/terraform-docs/terraform-docs@v0.16.0
           pre-commit run -a
