@@ -26,5 +26,5 @@ jobs:
           bash .utils/terraform_run_all.sh init local
       - name: run_test
         run: |
-          sudo apt install pre-commit -y
+          sudo apt install -y pre-commit gnupg software-properties-common terraform
           pre-commit run -a
