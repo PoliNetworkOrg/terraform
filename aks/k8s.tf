@@ -95,7 +95,7 @@ module "cert_manager" {
   source  = "terraform-iaac/cert-manager/kubernetes"
   version = "2.4.2"
 
-  cluster_issuer_server                  = "https://acme-v02.api.letsencrypt.org/directory"
+  cluster_issuer_server                  = "https://acme-v02.api.letsencrypt.org/directory" # staging: "https://acme-staging-v02.api.letsencrypt.org/directory"
   cluster_issuer_email                   = "adminorg@polinetwork.org"
   cluster_issuer_name                    = "letsencrypt-prod"
   cluster_issuer_private_key_secret_name = "letsencrypt-prod"
@@ -112,6 +112,22 @@ module "cert_manager" {
   depends_on = [
     helm_release.cert-manager-controller
   ]
+}
+
+
+resource "kubernetes_manifest" "cert-argo-dex" {
+  manifest = {
+    "apiVersion" = "cert-manager.io/v1"
+    "kind"       = "ClusterIssuer"
+    "metadata" = {
+      "name" = "ca-issuer"
+    }
+    spec = {
+      ca = {
+        secretName = "internal-ca"
+      }
+    }
+  }
 }
 
 
@@ -154,25 +170,14 @@ resource "azurerm_role_definition" "aks_reader" {
   ]
 }
 
+resource "kubernetes_secret" "internal-ca" {
+  metadata {
+    name      = "internal-ca"
+    namespace = "cert-manager"
+  }
 
-# module "cert_manager_prod" {
-#   source  = "terraform-iaac/cert-manager/kubernetes"
-#   version = "2.4.2"
-
-#   cluster_issuer_server                  = "https://acme-v02.api.letsencrypt.org/directory"
-#   cluster_issuer_email                   = "adminorg@polinetwork.org"
-#   cluster_issuer_name                    = "letsencrypt-prod"
-#   cluster_issuer_private_key_secret_name = "letsencrypt-prod"
-#   create_namespace                       = false
-#   solvers = [
-#     {
-#       http01 = {
-#         ingress = {
-#           class = "nginx"
-#         }
-#       }
-#     }
-#   ]
-# }
-
-
+  data = {
+    "tls.crt" = var.ca_tls_crt
+    "tls.key" = var.ca_tls_key
+  }
+}
