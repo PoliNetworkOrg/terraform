@@ -131,12 +131,12 @@ applications:
     source:
       repoURL: https://github.com/poliNetworkOrg/polinetwork-ext-cd
       targetRevision: HEAD
-      path: tutorapp-prod
+      path: tutor-prod
       directory:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: tutorapp-prod
+      namespace: tutor-prod
     syncPolicy:
       automated:
         prune: true

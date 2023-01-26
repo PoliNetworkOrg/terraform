@@ -56,6 +56,22 @@ module "app_dev" {
   db_user          = data.azurerm_key_vault_secret.dev_db_user.value
 }
 
+module "tutorapp" {
+  depends_on = [
+    module.mariadb
+  ]
+
+  source             = "./tutorapp/"
+  secretAuthUser     = data.azurerm_key_vault_secret.prod_tutorapp_auth_user.value
+  secretAuthPassword = data.azurerm_key_vault_secret.prod_tutorapp_auth_password.value
+  tutorapp_namespace = "tutor-prod"
+  bot_token          = data.azurerm_key_vault_secret.prod_tutorapp_bot_token.value
+  db_database        = "polimi_tutorapp"
+  db_host            = local.mariadb_internal_ip
+  db_password        = data.azurerm_key_vault_secret.prod_tutorapp_db_user.value
+  db_user            = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
+}
+
 module "bot_mod_dev" {
   depends_on = [
     module.mariadb
@@ -166,7 +182,12 @@ module "mariadb" {
       user     = data.azurerm_key_vault_secret.dev_app_admin_db_user.value
       password = data.azurerm_key_vault_secret.dev_app_admin_db_password.value
       database = "polinetwork_app_dev"
-    }
+    },
+    {
+      user     = data.azurerm_key_vault_secret.prod_tutorapp_db_user.value
+      password = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
+      database = "polimi_tutorapp"
+    },
   ]
 
   mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
@@ -203,6 +224,31 @@ data "azurerm_key_vault_secret" "argocd_client_secret" {
 
 data "azurerm_key_vault_secret" "argocd_client_id" {
   name         = "argocd-client-id"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_tutorapp_auth_user" {
+  name         = "prod-tutorapp-auth-user"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_tutorapp_auth_password" {
+  name         = "prod-tutorapp-auth-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_tutorapp_db_user" {
+  name         = "prod-tutorapp-db-user"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_tutorapp_bot_token" {
+  name         = "prod-tutorapp-bot-token"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_tutorapp_db_password" {
+  name         = "prod-tutorapp-db-password"
   key_vault_id = module.keyvault.key_vault_id
 }
 
