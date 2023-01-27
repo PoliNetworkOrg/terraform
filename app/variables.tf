@@ -14,16 +14,19 @@ variable "db_database" {
 }
 
 variable "db_host" {
-  type     = string
-  nullable = false
+  type      = string
+  sensitive = true
+  nullable  = false
 }
 
 variable "db_password" {
-  type     = string
-  nullable = false
+  type      = string
+  nullable  = false
+  sensitive = true
 }
 
 variable "db_user" {
-  type     = string
-  nullable = false
+  type      = string
+  nullable  = false
+  sensitive = true
 }

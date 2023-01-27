@@ -97,8 +97,8 @@ module "cert_manager" {
 
   cluster_issuer_server                  = "https://acme-v02.api.letsencrypt.org/directory" # staging: "https://acme-staging-v02.api.letsencrypt.org/directory"
   cluster_issuer_email                   = "adminorg@polinetwork.org"
-  cluster_issuer_name                    = "letsencrypt-prod"
-  cluster_issuer_private_key_secret_name = "letsencrypt-prod"
+  cluster_issuer_name                    = "letsencrypt-prod-issuer"
+  cluster_issuer_private_key_secret_name = "letsencrypt-prod-issuer"
   create_namespace                       = false
   solvers = [
     {
@@ -172,8 +172,7 @@ resource "azurerm_role_definition" "aks_reader" {
 
 resource "kubernetes_secret" "internal-ca" {
   metadata {
-    name      = "internal-ca"
-    namespace = "cert-manager"
+    name = "internal-ca"
   }
 
   data = {

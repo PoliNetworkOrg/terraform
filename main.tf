@@ -41,6 +41,12 @@ module "argo-cd" {
   ]
 }
 
+module "comms" {
+  source  = "./comm-service/"
+  rg_name = azurerm_resource_group.rg.name
+}
+
+
 module "app_dev" {
   depends_on = [
     module.mariadb
@@ -68,8 +74,8 @@ module "tutorapp" {
   bot_token          = data.azurerm_key_vault_secret.prod_tutorapp_bot_token.value
   db_database        = "polimi_tutorapp"
   db_host            = local.mariadb_internal_ip
-  db_password        = data.azurerm_key_vault_secret.prod_tutorapp_db_user.value
-  db_user            = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
+  db_user            = data.azurerm_key_vault_secret.prod_tutorapp_db_user.value
+  db_password        = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
 }
 
 module "bot_mod_dev" {
