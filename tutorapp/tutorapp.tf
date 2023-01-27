@@ -1,9 +1,3 @@
-resource "kubernetes_namespace" "tutorapp-namespace" {
-  metadata {
-    name = var.tutorapp_namespace
-  }
-}
-
 resource "kubernetes_secret" "tutorapp_secret" {
   metadata {
     name      = "tutorapp-config-secret"

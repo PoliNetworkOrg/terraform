@@ -56,7 +56,7 @@ server:
     enabled: true
     hosts: ["api.polinetwork.org"]
     annotations:
-      "cert-manager.io/cluster-issuer": "letsencrypt-prod"
+      "cert-manager.io/cluster-issuer": "letsencrypt-prod-issuer"
       "kubernetes.io/ingress.class": "nginx"
       "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS"
     paths: ["/"]
