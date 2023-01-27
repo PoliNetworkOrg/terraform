@@ -41,9 +41,10 @@ module "argo-cd" {
   ]
 }
 
-module "comms" {
-  source  = "./comm-service/"
-  rg_name = azurerm_resource_group.rg.name
+module "gh-runner" {
+  source           = "./gh-runner/"
+  runner_namespace = "gh-runner"
+  runner_token     = data.azurerm_key_vault_secret.gh_runner_token.value
 }
 
 
@@ -212,6 +213,12 @@ module "mariadb" {
 #   name         = "dev-bot-mat-git-password"
 #   key_vault_id = module.keyvault.key_vault_id
 # }
+
+data "azurerm_key_vault_secret" "gh_runner_token" {
+  name         = "gh-runner-token"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
 
 data "azurerm_key_vault_secret" "ca_tls_crt" {
   name         = "ca-crt"
