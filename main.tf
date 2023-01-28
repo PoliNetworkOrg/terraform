@@ -127,12 +127,12 @@ module "bot_mat_prod" {
   source = "./bots/"
 
   bot_namespace               = "bot-mat"
-  bot_token                   = data.azurerm_key_vault_secret.prod_bot_mat_token.value
+  bot_token                   = data.azurerm_key_vault_secret.prod_mat_token.value
   bot_onMessage               = "mat"
   db_database                 = "polinetwork_materials"
   db_host                     = local.mariadb_internal_ip
-  db_password                 = data.azurerm_key_vault_secret.prod_bot_mat_db_password.value
-  db_user                     = data.azurerm_key_vault_secret.prod_bot_mat_db_user.value
+  db_password                 = data.azurerm_key_vault_secret.prod_mat_db_password.value
+  db_user                     = data.azurerm_key_vault_secret.prod_mat_db_user.value
   persistent_storage          = true
   persistent_storage_size_gi  = "500"
   persistent_storage_location = azurerm_resource_group.rg.location
@@ -171,8 +171,8 @@ module "mariadb" {
       database = "polinetwork_test"
     },
     {
-      password = data.azurerm_key_vault_secret.prod_bot_mat_db_password.value
-      user     = data.azurerm_key_vault_secret.prod_bot_mat_db_user.value
+      password = data.azurerm_key_vault_secret.prod_mat_db_password.value
+      user     = data.azurerm_key_vault_secret.prod_mat_db_user.value
       database = "polinetwork_materials"
     },
     {
@@ -325,18 +325,18 @@ data "azurerm_key_vault_secret" "prod_mod_db_user" {
   key_vault_id = module.keyvault.key_vault_id
 }
 
-data "azurerm_key_vault_secret" "prod_bot_mat_token" {
+data "azurerm_key_vault_secret" "prod_mat_token" {
   name         = "prod-bot-mat-token"
   key_vault_id = module.keyvault.key_vault_id
 }
 
-data "azurerm_key_vault_secret" "prod_bot_mat_db_password" {
+data "azurerm_key_vault_secret" "prod_mat_db_password" {
   name         = "prod-bot-mat-db-password"
   key_vault_id = module.keyvault.key_vault_id
 }
 
-data "azurerm_key_vault_secret" "prod_bot_mat_db_user" {
-  name         = "prod-bot-mat-db-user"
+data "azurerm_key_vault_secret" "prod_mat_db_user" {
+  name         = "prod-mat-db-user"
   key_vault_id = module.keyvault.key_vault_id
 }
 
