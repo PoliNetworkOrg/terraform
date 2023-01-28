@@ -66,7 +66,7 @@ variable "git_user" {
 
 variable "git_email" {
   type      = string
-  sensitive = false
+  sensitive = true
   default   = ""
 }
 variable "git_password" {
