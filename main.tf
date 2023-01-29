@@ -210,7 +210,7 @@ data "azurerm_key_vault_secret" "prod_mod_git_email" {
 }
 
 data "azurerm_key_vault_secret" "prod_mod_git_password" {
-  name         = "prod-mod-git-password"
+  name         = "bot-prod-git-ssh-key"
   key_vault_id = module.keyvault.key_vault_id
 }
 

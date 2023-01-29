@@ -112,10 +112,28 @@ resource "kubernetes_secret" "git_config" {
     "git_info.json" = jsonencode({
       user        = var.git_user,
       email       = var.git_email,
-      password    = var.git_password,
       data_repo   = var.git_data_repo,
       remote_repo = var.git_remote_repo,
       path        = var.git_path
     })
+    "ssh-key" = var.git_password
+  }
+}
+
+resource "kubernetes_secret" "git_ssh_config" {
+  count = var.git_config ? 1 : 0
+  metadata {
+    name      = "ssh-config"
+    namespace = var.bot_namespace
+  }
+
+  data = {
+    "config" = <<EOF
+Host github
+ HostName github.com
+ User git
+ IdentityFile /git/ssh-key
+ IdentitiesOnly yes
+EOF
   }
 }
