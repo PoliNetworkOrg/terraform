@@ -114,8 +114,8 @@ module "bot_mod_prod" {
   git_user        = "PoliNetworkDev"
   git_email       = data.azurerm_key_vault_secret.prod_mod_git_email.value
   git_password    = data.azurerm_key_vault_secret.prod_mod_git_password.value
-  git_data_repo   = "github.com/PoliNetworkDev/polinetworkWebsiteData.git"
-  git_remote_repo = "github.com/PoliNetworkOrg/polinetworkWebsiteData.git"
+  git_data_repo   = "git@github.com:PoliNetworkDev/polinetworkWebsiteData.git"
+  git_remote_repo = "https://github.com/PoliNetworkOrg/polinetworkWebsiteData.git"
   git_path        = "./data/polinetworkWebsiteData/"
 }
 
