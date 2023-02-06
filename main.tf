@@ -77,6 +77,8 @@ module "tutorapp" {
   db_host            = local.mariadb_internal_ip
   db_user            = data.azurerm_key_vault_secret.prod_tutorapp_db_user.value
   db_password        = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
+  azureSecret        = data.azurerm_key_vault_secret.prod_tutorapp_azure_secret.value
+  azureClientId      = data.azurerm_key_vault_secret.prod_tutorapp_azure_clientid.value
 }
 
 module "bot_mod_dev" {
@@ -202,6 +204,16 @@ module "mariadb" {
 
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
+}
+
+data "azurerm_key_vault_secret" "prod_tutorapp_azure_secret" {
+  name         = "prod-tutorapp-azure-secret"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_tutorapp_azure_clientid" {
+  name         = "prod-tutorapp-azure-client-id"
+  key_vault_id = module.keyvault.key_vault_id
 }
 
 data "azurerm_key_vault_secret" "prod_mod_git_email" {

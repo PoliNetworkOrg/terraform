@@ -3,6 +3,17 @@ variable "tutorapp_namespace" {
   nullable = false
 }
 
+variable "azureSecret" {
+  type      = string
+  nullable  = false
+  sensitive = true
+}
+
+variable "azureClientId" {
+  type     = string
+  nullable = false
+}
+
 variable "bot_token" {
   type     = string
   nullable = false
