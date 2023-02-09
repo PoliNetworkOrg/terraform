@@ -7,7 +7,7 @@ resource "kubernetes_secret" "tutorapp_secret" {
   data = {
     "webconfig.json" = jsonencode({
       Port          = 5000,
-      WebLogLevel   = 2,
+      WebLogLevel   = 3,
       AuthUsr       = var.secretAuthUser,
       AuthPsw       = var.secretAuthPassword,
       AllowedCors   = "*",
@@ -24,7 +24,7 @@ resource "kubernetes_secret" "tutorapp_secret" {
     })
     "botconfig.json" = jsonencode({
       BotToken             = var.bot_token,
-      BotLogLevel          = 3,
+      BotLogLevel          = 2,
       UserTimeOut          = 120000
       TutorLockHours       = 24,
       HasOnlineAuth        = false,
