@@ -7,7 +7,7 @@ resource "kubernetes_secret" "tutorapp_secret" {
   data = {
     "webconfig.json" = jsonencode({
       Port          = 5000,
-      WebLogLevel   = 3,
+      WebLogLevel   = 2,
       AuthUsr       = var.secretAuthUser,
       AuthPsw       = var.secretAuthPassword,
       AllowedCors   = "*",
