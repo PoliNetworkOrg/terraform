@@ -77,6 +77,8 @@ module "tutorapp" {
   db_host            = local.mariadb_internal_ip
   db_user            = data.azurerm_key_vault_secret.prod_tutorapp_db_user.value
   db_password        = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
+  azureSecret        = data.azurerm_key_vault_secret.prod_tutorapp_azure_secret.value
+  azureClientId      = data.azurerm_key_vault_secret.prod_tutorapp_azure_clientid.value
 }
 
 module "bot_mod_dev" {
@@ -114,8 +116,8 @@ module "bot_mod_prod" {
   git_user        = "PoliNetworkDev"
   git_email       = data.azurerm_key_vault_secret.prod_mod_git_email.value
   git_password    = data.azurerm_key_vault_secret.prod_mod_git_password.value
-  git_data_repo   = "github.com/PoliNetworkDev/polinetworkWebsiteData.git"
-  git_remote_repo = "github.com/PoliNetworkOrg/polinetworkWebsiteData.git"
+  git_data_repo   = "git@github.com:PoliNetworkDev/polinetworkWebsiteData.git"
+  git_remote_repo = "https://github.com/PoliNetworkOrg/polinetworkWebsiteData.git"
   git_path        = "./data/polinetworkWebsiteData/"
 }
 
@@ -204,13 +206,23 @@ module "mariadb" {
   rg_name  = azurerm_resource_group.rg.name
 }
 
+data "azurerm_key_vault_secret" "prod_tutorapp_azure_secret" {
+  name         = "prod-tutorapp-azure-secret"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "prod_tutorapp_azure_clientid" {
+  name         = "prod-tutorapp-azure-client-id"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
 data "azurerm_key_vault_secret" "prod_mod_git_email" {
   name         = "prod-mod-git-email"
   key_vault_id = module.keyvault.key_vault_id
 }
 
 data "azurerm_key_vault_secret" "prod_mod_git_password" {
-  name         = "prod-mod-git-password"
+  name         = "bot-prod-git-ssh-key"
   key_vault_id = module.keyvault.key_vault_id
 }
 

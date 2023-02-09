@@ -59,6 +59,7 @@ applications:
         selfHeal: true
       syncOptions:
         - CreateNamespace=false
+        - Replace=true
     info:
     - name: url
       value: https://argoproj.github.io/
