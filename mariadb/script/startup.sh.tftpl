@@ -4,4 +4,5 @@ while ! mysqladmin ping --silent; do
     echo 'waiting for mariadb service'
     sleep 1
 done
-mysql -u root --password='${db_admin_password}' -e 'SET GLOBAL event_scheduler=ON' polinetwork_app_dev < /docker-entrypoint-initdb.d/initdb.sql
+mysql -u root --password='${db_admin_password}' < /docker-entrypoint-initdb.d/initdb.sql
+mysql -u root --password='${db_admin_password}' -e 'SET GLOBAL event_scheduler=ON' polinetwork_app_dev
