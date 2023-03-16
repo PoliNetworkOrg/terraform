@@ -1,6 +1,6 @@
 variable "aule_bot_token" {
-  type = string
-  sensitive = true
+  type        = string
+  sensitive   = true
   description = "Aule Bot Token"
 }
 

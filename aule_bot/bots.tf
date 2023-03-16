@@ -1,4 +1,4 @@
-resource "kubernetes_namespace" "bot-namespace" {
+resource "kubernetes_namespace" "namespace" {
   metadata {
     name = var.namespace
   }
