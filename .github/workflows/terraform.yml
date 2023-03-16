@@ -10,7 +10,7 @@ on:
 jobs:
   terraform:
     name: "Terraform"
-    runs-on: self-hosted
+    runs-on: ubuntu-22.04
     env:
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
