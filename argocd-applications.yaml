@@ -179,7 +179,7 @@ applications:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: aule_bot
+      namespace: aulebot
     syncPolicy:
       automated:
         prune: true

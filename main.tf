@@ -123,7 +123,7 @@ module "bot_mod_prod" {
 
 module "aule_bot" {
   source         = "./aule_bot"
-  namespace      = "aule_bot"
+  namespace      = "aulebot"
   aule_bot_token = data.azurerm_key_vault_secret.dev_aule_bot_token.value
 }
 
