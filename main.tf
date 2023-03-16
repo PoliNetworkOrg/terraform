@@ -121,6 +121,12 @@ module "bot_mod_prod" {
   git_path        = "./data/polinetworkWebsiteData/"
 }
 
+module "aule_bot" {
+  source = "./aule_bot"
+  namespace = "aule_bot"
+  aule_bot_token = data.azurerm_key_vault_secret.dev_aule_bot_token.value
+}
+
 module "bot_mat_prod" {
   depends_on = [
     module.mariadb
@@ -204,6 +210,12 @@ module "mariadb" {
 
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
+}
+
+
+data "azurerm_key_vault_secret" "dev_aule_bot_token" {
+  name         = "dev-aule-bot-token"
+  key_vault_id = module.keyvault.key_vault_id
 }
 
 data "azurerm_key_vault_secret" "prod_tutorapp_azure_secret" {
