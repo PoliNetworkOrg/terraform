@@ -10,10 +10,17 @@ variable "rg_name" {
 
 variable "ca_tls_crt" {
   type = string
+  sensitive = true
 }
 
 variable "ca_tls_key" {
   type = string
+  sensitive = true
+}
+
+variable "grafana_admin_password" {
+  type = string
+  sensitive = true
 }
 
 

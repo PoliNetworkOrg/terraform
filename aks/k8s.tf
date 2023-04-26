@@ -28,7 +28,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   default_node_pool {
     name         = "agentpool"
     vm_size      = "Standard_B2s"
-    node_count   = 2
+    node_count   = 3
     os_disk_type = "Managed"
   }
   linux_profile {
@@ -51,6 +51,12 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = "monitor"
+  }
+}
+
 resource "helm_release" "ingress-nginx" {
   name       = "ingress-nginx"
   repository = "https://kubernetes.github.io/ingress-nginx"
@@ -67,6 +73,27 @@ resource "helm_release" "ingress-nginx" {
 
   depends_on = [
     azurerm_kubernetes_cluster.k8s
+  ]
+}
+
+resource "helm_release" "prometheus-stack" {
+  name       = "prometheus"
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "kube-prometheus-stack"
+  version    = "45.7.1"
+  namespace  = "monitor"
+
+  cleanup_on_fail  = true
+  create_namespace = false
+
+  values = [
+    templatefile("${path.module}/values/grafana.yaml.tftpl", {
+      grafana_admin_password = var.grafana_admin_password
+    })
+  ]
+
+  depends_on = [
+    kubernetes_namespace.monitoring
   ]
 }
 

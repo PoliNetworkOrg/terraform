@@ -84,27 +84,6 @@ applications:
     info:
     - name: url
       value: https://argoproj.github.io/
-  - name: k8s-dashboard
-    namespace: argocd
-    project: default
-    source:
-      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
-      targetRevision: HEAD
-      path: dashboard
-      directory:
-        recurse: true
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: kubernetes-dashboard
-    syncPolicy:
-      automated:
-        prune: true
-        selfHeal: true
-      syncOptions:
-        - CreateNamespace=true
-    info:
-    - name: url
-      value: https://argoproj.github.io/
   - name: app-dev
     namespace: argocd
     project: default
@@ -147,18 +126,18 @@ applications:
     info:
     - name: url
       value: https://argoproj.github.io/
-  - name: github-runner
+  - name: aule-bot
     namespace: argocd
     project: default
     source:
       repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
       targetRevision: HEAD
-      path: gh-runner
+      path: bot-rooms
       directory:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: gh-runner
+      namespace: aulebot
     syncPolicy:
       automated:
         prune: true
@@ -168,18 +147,18 @@ applications:
     info:
     - name: url
       value: https://argoproj.github.io/
-  - name: aule-bot
+  - name: mc
     namespace: argocd
     project: default
     source:
       repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
       targetRevision: HEAD
-      path: aule_bot-main
+      path: mc
       directory:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: aulebot
+      namespace: minecraft
     syncPolicy:
       automated:
         prune: true

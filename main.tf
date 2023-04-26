@@ -21,6 +21,8 @@ module "aks" {
   ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key.value
   ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt.value
 
+  grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
+
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
@@ -122,9 +124,19 @@ module "bot_mod_prod" {
 }
 
 module "aule_bot" {
-  source         = "./aule_bot"
-  namespace      = "aulebot"
-  aule_bot_token = data.azurerm_key_vault_secret.dev_aule_bot_token.value
+  depends_on = [
+    module.mariadb
+  ]
+
+  source = "./bots/"
+
+  bot_namespace = "aulebot"
+  bot_token     = data.azurerm_key_vault_secret.dev_aule_bot_token.value
+  bot_onMessage = "au"
+  db_database   = "polinetwork_test"
+  db_host       = local.mariadb_internal_ip
+  db_password   = data.azurerm_key_vault_secret.dev_db_password.value
+  db_user       = data.azurerm_key_vault_secret.dev_db_user.value
 }
 
 module "bot_mat_prod" {
@@ -213,10 +225,16 @@ module "mariadb" {
 }
 
 
+data "azurerm_key_vault_secret" "grafana_admin_password" {
+  name         = "grafana-admin-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
 data "azurerm_key_vault_secret" "dev_aule_bot_token" {
   name         = "dev-aule-bot-token"
   key_vault_id = module.keyvault.key_vault_id
 }
+
 
 data "azurerm_key_vault_secret" "prod_tutorapp_azure_secret" {
   name         = "prod-tutorapp-azure-secret"
