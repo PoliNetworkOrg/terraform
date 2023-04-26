@@ -162,6 +162,22 @@ module "bot_mat_prod" {
   material_root_dir = "/Repos/"
 }
 
+module "mc" {
+  depends_on = [
+    module.mariadb
+  ]
+
+  source = "./mc/"
+
+  namespace                   = "mcserver"
+  amp_password                = data.azurerm_key_vault_secret.amp_password.value
+
+  persistent_storage          = true
+  persistent_storage_size_gi  = "50"
+  persistent_storage_location = azurerm_resource_group.rg.location
+  persistent_storage_rg_name  = azurerm_resource_group.rg.name
+}
+
 
 module "keyvault" {
   source = "./keyvault/"
@@ -224,6 +240,11 @@ module "mariadb" {
   rg_name  = azurerm_resource_group.rg.name
 }
 
+
+data "azurerm_key_vault_secret" "amp_password" {
+  name         = "mc-amp-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
 
 data "azurerm_key_vault_secret" "grafana_admin_password" {
   name         = "grafana-admin-password"

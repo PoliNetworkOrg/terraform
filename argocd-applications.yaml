@@ -158,7 +158,7 @@ applications:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: minecraft
+      namespace: mcserver
     syncPolicy:
       automated:
         prune: true
