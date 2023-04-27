@@ -8,7 +8,7 @@ resource "helm_release" "argo_cd" {
   name       = "argo"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
-  version    = "5.19.6"
+  version    = "5.24.0"
   namespace  = var.namespace
 
   cleanup_on_fail  = true

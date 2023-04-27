@@ -171,6 +171,7 @@ module "mc" {
 
   namespace                   = "mcserver"
   amp_password                = data.azurerm_key_vault_secret.amp_password.value
+  amp_license                 = data.azurerm_key_vault_secret.amp_license.value
 
   persistent_storage          = true
   persistent_storage_size_gi  = "50"
@@ -243,6 +244,11 @@ module "mariadb" {
 
 data "azurerm_key_vault_secret" "amp_password" {
   name         = "mc-amp-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "amp_license" {
+  name         = "mc-amp-license"
   key_vault_id = module.keyvault.key_vault_id
 }
 

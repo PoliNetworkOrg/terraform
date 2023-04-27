@@ -4,6 +4,12 @@ variable "amp_password" {
   sensitive = true
 }
 
+variable "amp_license" {
+  type     = string
+  nullable = false
+  sensitive = true
+}
+
 variable "namespace" {
   type     = string
   nullable = false
