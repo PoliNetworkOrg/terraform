@@ -1,12 +1,12 @@
 variable "amp_password" {
-  type     = string
-  nullable = false
+  type      = string
+  nullable  = false
   sensitive = true
 }
 
 variable "amp_license" {
-  type     = string
-  nullable = false
+  type      = string
+  nullable  = false
   sensitive = true
 }
 

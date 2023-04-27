@@ -14,7 +14,7 @@ resource "kubernetes_secret" "secret" {
   }
 
   data = {
-    PASSWORD = var.amp_password
+    PASSWORD    = var.amp_password
     AMP_LICENSE = var.amp_license
   }
 }

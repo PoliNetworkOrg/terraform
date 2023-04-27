@@ -23,6 +23,13 @@ module "aks" {
 
   grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
 
+  additional_node_pools = [{
+    name       = "userpool"
+    node_count = "1"
+    vm_size    = "Standard_B4ms"
+    mode       = "User"
+  }]
+
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
@@ -169,9 +176,9 @@ module "mc" {
 
   source = "./mc/"
 
-  namespace                   = "mcserver"
-  amp_password                = data.azurerm_key_vault_secret.amp_password.value
-  amp_license                 = data.azurerm_key_vault_secret.amp_license.value
+  namespace    = "mcserver"
+  amp_password = data.azurerm_key_vault_secret.amp_password.value
+  amp_license  = data.azurerm_key_vault_secret.amp_license.value
 
   persistent_storage          = true
   persistent_storage_size_gi  = "50"

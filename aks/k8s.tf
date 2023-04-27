@@ -28,8 +28,9 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   default_node_pool {
     name         = "agentpool"
     vm_size      = "Standard_B2s"
-    node_count   = 3
+    node_count   = 2
     os_disk_type = "Managed"
+    orchestrator_version  = "1.24.10"
   }
   linux_profile {
     admin_username = "ubuntu"
@@ -43,6 +44,18 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     network_plugin    = "kubenet"
     load_balancer_sku = "standard"
   }
+  kubernetes_version = "1.24.10"
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
+  for_each              = { for i, v in var.additional_node_pools : i => v }
+  name                  = each.value.name
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.k8s.id
+  vm_size               = each.value.vm_size
+  node_count            = each.value.node_count
+  mode                  = each.value.mode == null ? "User" : each.value.mode
+  tags                  = each.value.tags
+  orchestrator_version  = "1.24.10"
 }
 
 resource "kubernetes_namespace" "argocd" {
