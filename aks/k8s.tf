@@ -8,6 +8,8 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
   role_based_access_control_enabled = true
+  http_application_routing_enabled = true
+  
   azure_active_directory_role_based_access_control {
     managed            = true
     azure_rbac_enabled = true
@@ -58,35 +60,35 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
   orchestrator_version  = "1.24.10"
 }
 
-resource "kubernetes_namespace" "argocd" {
-  metadata {
-    name = "nginx-ingress"
-  }
-}
+# resource "kubernetes_namespace" "nginx" {
+#   metadata {
+#     name = "nginx-ingress"
+#   }
+# }
+
+# resource "helm_release" "ingress-nginx" {
+#   name       = "ingress-nginx"
+#   repository = "https://kubernetes.github.io/ingress-nginx"
+#   chart      = "ingress-nginx"
+#   namespace  = "nginx-ingress"
+
+#   cleanup_on_fail  = true
+#   create_namespace = true
+
+#   values = [
+#     templatefile("${path.module}/values/ingress.yaml.tftpl", {
+#     })
+#   ]
+
+#   depends_on = [
+#     azurerm_kubernetes_cluster.k8s
+#   ]
+# }
 
 resource "kubernetes_namespace" "monitoring" {
   metadata {
     name = "monitor"
   }
-}
-
-resource "helm_release" "ingress-nginx" {
-  name       = "ingress-nginx"
-  repository = "https://kubernetes.github.io/ingress-nginx"
-  chart      = "ingress-nginx"
-  namespace  = "nginx-ingress"
-
-  cleanup_on_fail  = true
-  create_namespace = true
-
-  values = [
-    templatefile("${path.module}/values/ingress.yaml.tftpl", {
-    })
-  ]
-
-  depends_on = [
-    azurerm_kubernetes_cluster.k8s
-  ]
 }
 
 resource "helm_release" "prometheus-stack" {
@@ -102,7 +104,8 @@ resource "helm_release" "prometheus-stack" {
   values = [
     templatefile("${path.module}/values/grafana.yaml.tftpl", {
       grafana_admin_password = var.grafana_admin_password
-    })
+    }),
+    file("${path.module}/values/custom-metrics.yaml")
   ]
 
   depends_on = [
