@@ -71,3 +71,42 @@ resource "kubernetes_persistent_volume_claim" "storage_pvc" {
     volume_name = kubernetes_persistent_volume.storage[0].metadata[0].name
   }
 }
+
+resource "kubernetes_role" "mc_dev" {
+  metadata {
+    name = "MCDev"
+    labels = {
+      group = "MCDev"
+    }
+    namespace = "mcserver"
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods"]
+    verbs      = ["get", "list"]
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods/portforward"]
+    verbs      = ["create"]
+  }
+}
+
+resource "kubernetes_role_binding" "mc_dev" {
+  metadata {
+    name      = "mc-dev-bind"
+    namespace = "mcserver"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = "MCDev"
+  }
+  subject {
+    kind      = "Group"
+    name      = "c5777fbb-cc2f-4a79-a9a0-455170b86803"
+    api_group = "rbac.authorization.k8s.io"
+  }
+}
