@@ -147,7 +147,7 @@ module "cert_manager" {
     {
       http01 = {
         ingress = {
-          class = "nginx"
+          class = "addon-http-application-routing"
         }
       }
     }
