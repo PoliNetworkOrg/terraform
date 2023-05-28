@@ -30,7 +30,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   default_node_pool {
     name         = "agentpool"
     vm_size      = "Standard_B2s"
-    node_count   = 2
+    node_count   = 3
     os_disk_type = "Managed"
     orchestrator_version  = "1.24.10"
   }

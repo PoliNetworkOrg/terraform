@@ -25,7 +25,7 @@ module "aks" {
 
   additional_node_pools = [{
     name       = "userpool"
-    node_count = "1"
+    node_count = "0"
     vm_size    = "Standard_B4ms"
     mode       = "User"
   }]

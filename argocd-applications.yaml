@@ -1,4 +1,4 @@
-applications: 
+applications:
   - name: bot-dev
     namespace: argocd
     project: default
@@ -18,8 +18,8 @@ applications:
       syncOptions:
         - CreateNamespace=false
     info:
-    - name: url
-      value: https://argoproj.github.io/
+      - name: url
+        value: https://argoproj.github.io/
   - name: bot-prod
     namespace: argocd
     project: default
@@ -39,8 +39,8 @@ applications:
       syncOptions:
         - CreateNamespace=false
     info:
-    - name: url
-      value: https://argoproj.github.io/
+      - name: url
+        value: https://argoproj.github.io/
   - name: bot-mat
     namespace: argocd
     project: default
@@ -61,8 +61,8 @@ applications:
         - CreateNamespace=false
         - Replace=true
     info:
-    - name: url
-      value: https://argoproj.github.io/
+      - name: url
+        value: https://argoproj.github.io/
   - name: mariadb
     namespace: argocd
     project: default
@@ -82,8 +82,8 @@ applications:
       syncOptions:
         - CreateNamespace=false
     info:
-    - name: url
-      value: https://argoproj.github.io/
+      - name: url
+        value: https://argoproj.github.io/
   - name: app-dev
     namespace: argocd
     project: default
@@ -103,8 +103,8 @@ applications:
       syncOptions:
         - CreateNamespace=false
     info:
-    - name: url
-      value: https://argoproj.github.io/
+      - name: url
+        value: https://argoproj.github.io/
   - name: polimi-tutorapp
     namespace: argocd
     project: default
@@ -124,8 +124,8 @@ applications:
       syncOptions:
         - CreateNamespace=false
     info:
-    - name: url
-      value: https://argoproj.github.io/
+      - name: url
+        value: https://argoproj.github.io/
   - name: aule-bot
     namespace: argocd
     project: default
@@ -145,26 +145,26 @@ applications:
       syncOptions:
         - CreateNamespace=false
     info:
-    - name: url
-      value: https://argoproj.github.io/
-  - name: mc
-    namespace: argocd
-    project: default
-    source:
-      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
-      targetRevision: HEAD
-      path: mc
-      directory:
-        recurse: true
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: mcserver
-    syncPolicy:
-      automated:
-        prune: true
-        selfHeal: true
-      syncOptions:
-        - CreateNamespace=false
-    info:
-    - name: url
-      value: https://argoproj.github.io/
+      - name: url
+        value: https://argoproj.github.io/
+  # - name: mc
+  #   namespace: argocd
+  #   project: default
+  #   source:
+  #     repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+  #     targetRevision: HEAD
+  #     path: mc
+  #     directory:
+  #       recurse: true
+  #   destination:
+  #     server: https://kubernetes.default.svc
+  #     namespace: mcserver
+  #   syncPolicy:
+  #     automated:
+  #       prune: true
+  #       selfHeal: true
+  #     syncOptions:
+  #       - CreateNamespace=false
+  #   info:
+  #   - name: url
+  #     value: https://argoproj.github.io/
