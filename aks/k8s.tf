@@ -95,7 +95,7 @@ resource "helm_release" "prometheus-stack" {
   name       = "prometheus"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"
-  version    = "45.7.1"
+  version    = "45.28.0"
   namespace  = "monitor"
 
   cleanup_on_fail  = true
@@ -104,8 +104,7 @@ resource "helm_release" "prometheus-stack" {
   values = [
     templatefile("${path.module}/values/grafana.yaml.tftpl", {
       grafana_admin_password = var.grafana_admin_password
-    }),
-    file("${path.module}/values/custom-metrics.yaml")
+    })
   ]
 
   depends_on = [
