@@ -5,6 +5,10 @@
 *.tfstate
 *.tfstate.*
 
+**/venv/
+utils/reports/
+**data.json
+
 # Crash log files
 crash.log
 
