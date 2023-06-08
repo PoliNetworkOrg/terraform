@@ -30,9 +30,11 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   default_node_pool {
     name         = "agentpool"
     vm_size      = "Standard_B2s"
-    node_count   = 3
     os_disk_type = "Managed"
-    orchestrator_version  = "1.24.10"
+    orchestrator_version  = var.kubernetes_orchestrator_version
+    enable_auto_scaling = true
+    max_count = 4
+    min_count = 1
   }
   linux_profile {
     admin_username = "ubuntu"
@@ -46,7 +48,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     network_plugin    = "kubenet"
     load_balancer_sku = "standard"
   }
-  kubernetes_version = "1.24.10"
+  kubernetes_version = var.kubernetes_orchestrator_version
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
@@ -57,7 +59,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
   node_count            = each.value.node_count
   mode                  = each.value.mode == null ? "User" : each.value.mode
   tags                  = each.value.tags
-  orchestrator_version  = "1.24.10"
+  orchestrator_version  = var.kubernetes_orchestrator_version
 }
 
 # resource "kubernetes_namespace" "nginx" {

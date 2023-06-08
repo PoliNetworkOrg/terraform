@@ -34,6 +34,11 @@ variable "additional_node_pools" {
   default = []
 }
 
+variable "kubernetes_orchestrator_version" {
+  type = string
+  description = "Kubernetes version"
+}
+
 # variable "repo_credentials" {
 #   type = list(object({
 #     key           = string,

@@ -33,6 +33,8 @@ module "aks" {
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
+  kubernetes_orchestrator_version = "1.26.3"
+
 }
 
 module "argo-cd" {
