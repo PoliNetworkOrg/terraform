@@ -1,18 +1,18 @@
 repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.77.0
+    rev: v1.81.0
     hooks:
       - id: terraform_fmt
       - id: terraform_docs
         args:
-          - '--args=--sort-by=required --lockfile=false'
+          - "--args=--sort-by=required --lockfile=false"
       - id: terraform_tfsec
         args:
           - >
             --args=--exclude-downloaded-modules
             -e azure-container-logging
       - id: terraform_tflint
-        args: [ '--args=--config=__GIT_WORKING_DIR__/.tflint.hcl' ]
+        args: ["--args=--config=__GIT_WORKING_DIR__/.tflint.hcl"]
       - id: terraform_validate
         args:
           - --args=-json

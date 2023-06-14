@@ -1,0 +1,136 @@
+defaultRules:
+  create: true
+  rules:
+    kubeControllerManager: false
+    kubeProxy: false
+    kubeSchedulerAlerting: false
+
+grafana:
+  adminPassword: ${grafana_admin_password}
+  ingress:
+    enabled: true
+    hosts:
+      - monitoring.polinetwork.org
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod-issuer
+      kubernetes.io/ingress.class: addon-http-application-routing
+      kubernetes.io/tls-acme: "true"
+    path: /
+    tls:
+      - hosts:
+          - monitoring.polinetwork.org
+        secretName: grafana-ingress-secret
+  persistence:
+    enabled: true
+    type: pvc
+    existingClaim: grafana-pvc
+
+prometheus:
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: managed-csi
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 32Gi
+
+alertmanager:
+  config:
+    route:
+      group_by: ["namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: "alert"
+      routes:
+        - receiver: "null"
+          matchers:
+            - alertname =~ "InfoInhibitor|Watchdog"
+    receivers:
+      - name: "null"
+      - name: "alert"
+        telegram_configs:
+          - bot_token: ${cluster_monitoring_telegram_token}
+            api_url: https://api.telegram.org
+            chat_id: 107050697
+    templates:
+      - "/etc/alertmanager/config/*.tmpl"
+
+additionalPrometheusRulesMap:
+  pn:
+    groups:
+      - name: pod-rules-group
+        rules:
+          - alert: PodDown
+            expr: absent(kube_pod_status_phase{phase="Running"})
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: Pod is down
+              description: Pod {{ $labels.namespace }}/{{ $labels.pod }} is down.
+          - alert: PodOOMKilled
+            expr: rate(kube_pod_container_status_terminated_reason{reason="OOMKilled"}[5m]) > 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: Pod killed due to OOM
+              description: Pod {{$labels.namespace}}/{{$labels.pod}} was killed due to OOM
+          - alert: HighDeploymentFailureRate
+            expr: >
+              1 - (kube_deployment_status_replicas_available /
+              kube_deployment_spec_replicas) > 0.9
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: High deployment failure rate
+              description: More than 90% of total replicas for Deployment {{$labels.namespace}}/{{$labels.deployment}} are down
+      - name: cert-manager
+        rules:
+          - alert: CertManagerAbsent
+            annotations:
+              description: New certificates will not be able to be minted, and existing ones can't be renewed until cert-manager is back.
+              runbook_url: https://gitlab.com/uneeq-oss/cert-manager-mixin/-/blob/master/RUNBOOK.md#certmanagerabsent
+              summary: Cert Manager has dissapeared from Prometheus service discovery.
+            expr: absent(up{job="cert-manager"})
+            for: 10m
+            labels:
+              severity: critical
+      - name: certificates
+        rules:
+          - alert: CertManagerCertExpirySoon
+            annotations:
+              dashboard_url: https://grafana.example.com/d/TvuRo2iMk/cert-manager
+              description: The domain that this cert covers will be unavailable after {{$value | humanizeDuration }}. Clients using endpoints that this cert protects will start to fail in {{ $value | humanizeDuration}}.
+              runbook_url: https://gitlab.com/uneeq-oss/cert-manager-mixin/-/blob/master/RUNBOOK.md#certmanagercertexpirysoon
+              summary: The cert `{{ $labels.name }}` is {{ $value | humanizeDuration }} from expiry, it should have renewed over a week ago.
+            expr: |
+              avg by (exported_namespace, namespace, name) (certmanager_certificate_expiration_timestamp_seconds - time()) < (21 * 24 * 3600) # 21 days in seconds
+            for: 1h
+            labels:
+              severity: warning
+          - alert: CertManagerCertNotReady
+            annotations:
+              dashboard_url: https://grafana.example.com/d/TvuRo2iMk/cert-manager
+              description: This certificate has not been ready to serve traffic for at least 10m. If the cert is being renewed or there is another valid cert, the ingress controller _may_ be able to serve that instead.
+              runbook_url: https://gitlab.com/uneeq-oss/cert-manager-mixin/-/blob/master/RUNBOOK.md#certmanagercertnotready
+              summary: The cert `{{ $labels.name }}` is not ready to serve traffic.
+            expr: max by (name, exported_namespace, namespace, condition) (certmanager_certificate_ready_status{condition!="True"} == 1)
+            for: 10m
+            labels:
+              severity: critical
+          - alert: CertManagerHittingRateLimits
+            annotations:
+              dashboard_url: https://grafana.example.com/d/TvuRo2iMk/cert-manager
+              description: Depending on the rate limit, cert-manager may be unable to generate certificates for up to a week.
+              runbook_url: https://gitlab.com/uneeq-oss/cert-manager-mixin/-/blob/master/RUNBOOK.md#certmanagerhittingratelimits
+              summary: Cert manager hitting LetsEncrypt rate limits.
+            expr: sum by (host) (rate(certmanager_http_acme_client_request_count{status="429"}[5m])) > 0
+            for: 5m
+            labels:
+              severity: critical

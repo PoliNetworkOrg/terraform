@@ -21,8 +21,6 @@ module "aks" {
   ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key.value
   ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt.value
 
-  grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
-
   additional_node_pools = [{
     name       = "userpool"
     node_count = "0"
@@ -58,7 +56,6 @@ module "gh-runner" {
   runner_token     = data.azurerm_key_vault_secret.gh_runner_token.value
 }
 
-
 module "app_dev" {
   depends_on = [
     module.mariadb
@@ -90,6 +87,25 @@ module "tutorapp" {
   db_password        = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
   azureSecret        = data.azurerm_key_vault_secret.prod_tutorapp_azure_secret.value
   azureClientId      = data.azurerm_key_vault_secret.prod_tutorapp_azure_clientid.value
+}
+
+module "monitoring" {
+  depends_on = [
+    module.aks
+  ]
+
+  source = "./monitoring/"
+
+  namespace = "monitoring"
+
+  cluster_monitoring_app_password   = data.azurerm_key_vault_secret.cluster_monitoring_app_password.value
+  cluster_monitoring_telegram_token = data.azurerm_key_vault_secret.cluster_monitoring_telegram_token.value
+
+  grafana_admin_password      = data.azurerm_key_vault_secret.grafana_admin_password.value
+  persistent_storage          = true
+  persistent_storage_size_gi  = "10"
+  persistent_storage_location = azurerm_resource_group.rg.location
+  persistent_storage_rg_name  = azurerm_resource_group.rg.name
 }
 
 module "bot_mod_dev" {
@@ -418,6 +434,15 @@ data "azurerm_key_vault_secret" "prod_mat_db_user" {
   key_vault_id = module.keyvault.key_vault_id
 }
 
+data "azurerm_key_vault_secret" "cluster_monitoring_app_password" {
+  name         = "cluster-monitoring-app-password"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "cluster_monitoring_telegram_token" {
+  name         = "cluster-monitoring-telegram-token"
+  key_vault_id = module.keyvault.key_vault_id
+}
 
 
 # HOW TO CONFIGURE INFRA

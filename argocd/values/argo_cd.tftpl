@@ -38,20 +38,20 @@ configs:
 controller:
   resources:
     requests:
-      cpu: "50m"
-      memory: "50Mi"
+      cpu: "200m"
+      memory: "200Mi"
     limits:
-      cpu: "700m"
-      memory: "1000Mi"
+      cpu: "600m"
+      memory: "600Mi"
 
 server:
   resources:
     requests:
-      cpu: "50m"
-      memory: "50Mi"
+      cpu: "200m"
+      memory: "300Mi"
     limits:
-      cpu: "700m"
-      memory: "1000Mi"
+      cpu: "500m"
+      memory: "600Mi"
   ingress:
     enabled: true
     hosts: ["api.polinetwork.org"]
@@ -61,6 +61,6 @@ server:
       "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS"
     paths: ["/"]
     tls:
-    - hosts:
-      - "api.polinetwork.org"
-      secretName: "argocd-secret"
+      - hosts:
+          - "api.polinetwork.org"
+        secretName: "argocd-secret"

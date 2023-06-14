@@ -8,8 +8,8 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
   role_based_access_control_enabled = true
-  http_application_routing_enabled = true
-  
+  http_application_routing_enabled  = true
+
   azure_active_directory_role_based_access_control {
     managed            = true
     azure_rbac_enabled = true
@@ -28,13 +28,13 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   }
 
   default_node_pool {
-    name         = "agentpool"
-    vm_size      = "Standard_B2s"
-    os_disk_type = "Managed"
-    orchestrator_version  = var.kubernetes_orchestrator_version
-    enable_auto_scaling = true
-    max_count = 4
-    min_count = 1
+    name                 = "agentpool"
+    vm_size              = "Standard_B2s"
+    os_disk_type         = "Managed"
+    orchestrator_version = var.kubernetes_orchestrator_version
+    enable_auto_scaling  = true
+    max_count            = 5
+    min_count            = 4
   }
   linux_profile {
     admin_username = "ubuntu"
@@ -87,32 +87,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
 #   ]
 # }
 
-resource "kubernetes_namespace" "monitoring" {
-  metadata {
-    name = "monitor"
-  }
-}
-
-resource "helm_release" "prometheus-stack" {
-  name       = "prometheus"
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "kube-prometheus-stack"
-  version    = "45.28.0"
-  namespace  = "monitor"
-
-  cleanup_on_fail  = true
-  create_namespace = false
-
-  values = [
-    templatefile("${path.module}/values/grafana.yaml.tftpl", {
-      grafana_admin_password = var.grafana_admin_password
-    })
-  ]
-
-  depends_on = [
-    kubernetes_namespace.monitoring
-  ]
-}
 
 resource "kubernetes_namespace" "cert_manager" {
   metadata {
@@ -137,7 +111,7 @@ resource "helm_release" "cert-manager-controller" {
 
 module "cert_manager" {
   source  = "terraform-iaac/cert-manager/kubernetes"
-  version = "2.4.2"
+  version = "2.5.1"
 
   cluster_issuer_server                  = "https://acme-v02.api.letsencrypt.org/directory" # staging: "https://acme-staging-v02.api.letsencrypt.org/directory"
   cluster_issuer_email                   = "adminorg@polinetwork.org"
@@ -153,25 +127,28 @@ module "cert_manager" {
       }
     }
   ]
+
+  additional_set = [
+    {
+      name  = "prometheus.enabled"
+      value = true
+    },
+    {
+      name  = "prometheus.servicemonitor.enabled"
+      value = true
+    },
+    {
+      name  = "prometheus.servicemonitor.namespace"
+      value = "monitoring"
+    },
+    {
+      name  = "prometheus.servicemonitor.labels.release"
+      value = "prometheus"
+    }
+  ]
   depends_on = [
     helm_release.cert-manager-controller
   ]
-}
-
-
-resource "kubernetes_manifest" "cert-argo-dex" {
-  manifest = {
-    "apiVersion" = "cert-manager.io/v1"
-    "kind"       = "ClusterIssuer"
-    "metadata" = {
-      "name" = "ca-issuer"
-    }
-    spec = {
-      ca = {
-        secretName = "internal-ca"
-      }
-    }
-  }
 }
 
 
@@ -212,15 +189,4 @@ resource "azurerm_role_definition" "aks_reader" {
   assignable_scopes = [
     data.azurerm_subscription.primary.id
   ]
-}
-
-resource "kubernetes_secret" "internal-ca" {
-  metadata {
-    name = "internal-ca"
-  }
-
-  data = {
-    "tls.crt" = var.ca_tls_crt
-    "tls.key" = var.ca_tls_key
-  }
 }

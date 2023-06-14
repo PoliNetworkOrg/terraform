@@ -18,11 +18,6 @@ variable "ca_tls_key" {
   sensitive = true
 }
 
-variable "grafana_admin_password" {
-  type      = string
-  sensitive = true
-}
-
 variable "additional_node_pools" {
   type = list(object({
     name       = string
@@ -35,7 +30,7 @@ variable "additional_node_pools" {
 }
 
 variable "kubernetes_orchestrator_version" {
-  type = string
+  type        = string
   description = "Kubernetes version"
 }
 
