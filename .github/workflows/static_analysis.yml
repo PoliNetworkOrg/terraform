@@ -4,6 +4,7 @@ on:
   push:
   workflow_dispatch:
 
+
 jobs:
   static_analysis:
     runs-on: ubuntu-latest
@@ -18,19 +19,15 @@ jobs:
         uses: hashicorp/setup-terraform@v1
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_version: 1.4.0
       
       - uses: actions/setup-go@v3
-      - name: run_init
-        run: |
-          terraform init
-          bash .utils/terraform_run_all.sh init local
       - name: run_test
         run: |
           sudo apt install -y pre-commit gnupg software-properties-common
-          sudo snap install terraform --classic
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-          go install github.com/terraform-docs/terraform-docs@v0.16.0
-          go install github.com/aquasecurity/tfsec/cmd/tfsec@latest
+          tflint -v || curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          terraform-docs -v || go install github.com/terraform-docs/terraform-docs@v0.16.0
+          tfsec -v || go install github.com/aquasecurity/tfsec/cmd/tfsec@latest
           export GOPATH=$HOME/go
           export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
           pre-commit run -a
