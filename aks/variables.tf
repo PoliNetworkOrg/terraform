@@ -20,11 +20,14 @@ variable "ca_tls_key" {
 
 variable "additional_node_pools" {
   type = list(object({
-    name       = string
-    vm_size    = string
-    node_count = string
-    tags       = optional(map(string))
-    mode       = optional(string)
+    name                = string
+    vm_size             = string
+    node_count          = string
+    max_count           = number
+    min_count           = number
+    enable_auto_scaling = bool
+    tags                = optional(map(string))
+    mode                = optional(string)
   }))
   default = []
 }
@@ -32,6 +35,11 @@ variable "additional_node_pools" {
 variable "kubernetes_orchestrator_version" {
   type        = string
   description = "Kubernetes version"
+}
+
+variable "cert_namespace" {
+  type    = string
+  default = "cert-manager"
 }
 
 # variable "repo_credentials" {

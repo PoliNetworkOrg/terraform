@@ -1,0 +1,15 @@
+config:
+  outputs: |
+    [OUTPUT]
+        Name http
+        Match *
+        URI /api/default/default/_json
+        Host openobserve
+        Port 5080
+        tls Off
+        Format json
+        Json_date_key    _timestamp
+        Json_date_format iso8601
+        HTTP_User adminorg@polinetwork.org
+        HTTP_Passwd ${openobserve_password}
+        compress gzip

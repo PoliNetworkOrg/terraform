@@ -28,14 +28,16 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   }
 
   default_node_pool {
-    name                 = "agentpool"
-    vm_size              = "Standard_B2s"
+    name                 = "userpool"
+    vm_size              = "Standard_B2ms"
     os_disk_type         = "Managed"
     orchestrator_version = var.kubernetes_orchestrator_version
     enable_auto_scaling  = true
-    max_count            = 5
-    min_count            = 4
+    max_count            = 1
+    min_count            = 1
+    node_count           = 1
   }
+
   linux_profile {
     admin_username = "ubuntu"
 
@@ -60,6 +62,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
   mode                  = each.value.mode == null ? "User" : each.value.mode
   tags                  = each.value.tags
   orchestrator_version  = var.kubernetes_orchestrator_version
+  enable_auto_scaling   = each.value.enable_auto_scaling
+  max_count             = each.value.max_count
+  min_count             = each.value.min_count
 }
 
 # resource "kubernetes_namespace" "nginx" {
@@ -86,70 +91,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
 #     azurerm_kubernetes_cluster.k8s
 #   ]
 # }
-
-
-resource "kubernetes_namespace" "cert_manager" {
-  metadata {
-    name = "cert-manager"
-  }
-}
-
-
-resource "helm_release" "cert-manager-controller" {
-  name       = "jetstack"
-  repository = "https://charts.jetstack.io"
-  chart      = "cert-manager"
-  version    = "v1.11.0"
-
-  cleanup_on_fail  = true
-  create_namespace = true
-
-  depends_on = [
-    azurerm_kubernetes_cluster.k8s
-  ]
-}
-
-module "cert_manager" {
-  source  = "terraform-iaac/cert-manager/kubernetes"
-  version = "2.5.1"
-
-  cluster_issuer_server                  = "https://acme-v02.api.letsencrypt.org/directory" # staging: "https://acme-staging-v02.api.letsencrypt.org/directory"
-  cluster_issuer_email                   = "adminorg@polinetwork.org"
-  cluster_issuer_name                    = "letsencrypt-prod-issuer"
-  cluster_issuer_private_key_secret_name = "letsencrypt-prod-issuer"
-  create_namespace                       = false
-  solvers = [
-    {
-      http01 = {
-        ingress = {
-          class = "addon-http-application-routing"
-        }
-      }
-    }
-  ]
-
-  additional_set = [
-    {
-      name  = "prometheus.enabled"
-      value = true
-    },
-    {
-      name  = "prometheus.servicemonitor.enabled"
-      value = true
-    },
-    {
-      name  = "prometheus.servicemonitor.namespace"
-      value = "monitoring"
-    },
-    {
-      name  = "prometheus.servicemonitor.labels.release"
-      value = "prometheus"
-    }
-  ]
-  depends_on = [
-    helm_release.cert-manager-controller
-  ]
-}
 
 
 resource "kubernetes_cluster_role_binding" "adminorg" {
