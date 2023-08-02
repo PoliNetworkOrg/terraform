@@ -180,3 +180,13 @@ data "azurerm_key_vault_secret" "elasticsearch_password" {
   name         = "elasticsearch-password"
   key_vault_id = module.keyvault.key_vault_id
 }
+
+data "azurerm_key_vault_secret" "dev_newbot_db_user" {
+  name         = "dev-newbot-db-user"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "dev_newbot_db_password" {
+  name         = "dev-newbot-db-password"
+  key_vault_id = module.keyvault.key_vault_id
+}

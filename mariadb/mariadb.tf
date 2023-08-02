@@ -4,23 +4,6 @@ resource "kubernetes_namespace" "mariadb" {
   }
 }
 
-resource "kubernetes_service" "mariadb_service" {
-  metadata {
-    name      = "mariadb"
-    namespace = "mariadb"
-  }
-  spec {
-    selector = {
-      app = "mariadb"
-    }
-    port {
-      port = 3306
-    }
-    type       = "ClusterIP"
-    cluster_ip = var.mariadb_internal_ip
-  }
-}
-
 resource "kubernetes_secret" "mariadb_admin" {
   metadata {
     name      = "mariadb-secret"

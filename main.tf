@@ -12,7 +12,7 @@ data "http" "myip" {
 locals {
   my_ip               = "${chomp(data.http.myip.response_body)}/32"
   elia-ip             = "185.178.95.235/32"
-  mariadb_internal_ip = "10.0.10.10"
+  mariadb_internal_ip = "mariadb-service.mariadb.svc.cluster.local"
 }
 
 module "aks" {
@@ -293,6 +293,11 @@ module "mariadb" {
       password = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
       database = "polimi_tutorapp"
     },
+    {
+      user     = data.azurerm_key_vault_secret.dev_newbot_db_user.value
+      password = data.azurerm_key_vault_secret.dev_newbot_db_password.value
+      database = "polinetwork_newbot_dev"
+    }
   ]
 
   mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
