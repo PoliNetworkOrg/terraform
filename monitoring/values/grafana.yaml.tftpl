@@ -23,7 +23,7 @@ grafana:
           - monitoring.polinetwork.org
         secretName: grafana-ingress-secret
   persistence:
-    enabled: false
+    enabled: true
     type: pvc
     existingClaim: grafana-pvc
 
