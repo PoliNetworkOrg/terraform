@@ -86,7 +86,7 @@ resource "kubernetes_persistent_volume" "storage" {
 resource "kubernetes_persistent_volume_claim" "storage_pvc" {
   count = var.persistent_storage ? 1 : 0
   metadata {
-    name      = "bot-pvc"
+    name      = var.pvc_name == "" ? "bot-pvc" : var.pvc_name
     namespace = var.bot_namespace
   }
   spec {

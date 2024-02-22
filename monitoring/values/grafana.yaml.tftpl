@@ -23,12 +23,13 @@ grafana:
           - monitoring.polinetwork.org
         secretName: grafana-ingress-secret
   persistence:
-    enabled: true
+    enabled: false
     type: pvc
     existingClaim: grafana-pvc
 
 prometheus:
   prometheusSpec:
+    retention: 5d
     storageSpec:
       volumeClaimTemplate:
         spec:
