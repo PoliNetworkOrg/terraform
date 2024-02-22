@@ -29,6 +29,7 @@ grafana:
 
 prometheus:
   prometheusSpec:
+    retention: 5d
     storageSpec:
       volumeClaimTemplate:
         spec:

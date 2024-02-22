@@ -31,11 +31,13 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     name                 = "userpool"
     vm_size              = "Standard_B2ms"
     os_disk_type         = "Managed"
+    os_disk_size_gb      = 30
     orchestrator_version = var.kubernetes_orchestrator_version
     enable_auto_scaling  = true
     max_count            = 1
     min_count            = 1
     node_count           = 1
+    temporary_name_for_rotation = "temp" 
   }
 
   linux_profile {

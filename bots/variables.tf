@@ -108,3 +108,9 @@ variable "material_root_dir" {
   sensitive = false
   default   = ""
 }
+
+variable "pvc_name" {
+  type      = string
+  sensitive = false
+  default   = ""
+}

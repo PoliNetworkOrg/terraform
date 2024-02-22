@@ -25,9 +25,9 @@ module "aks" {
     {
       name                = "supportpool"
       min_count           = 0
-      max_count           = 1
+      max_count           = 0
       node_count          = 0
-      enable_auto_scaling = true
+      enable_auto_scaling = false
       vm_size             = "Standard_B2s"
       mode                = "User"
     }
@@ -113,34 +113,34 @@ module "monitoring" {
   persistent_storage_rg_name  = azurerm_resource_group.rg.name
 }
 
-module "monitoring-logging" {
-  depends_on = [
-    module.aks
-  ]
+# module "monitoring-logging" {
+#   depends_on = [
+#     module.aks
+#   ]
 
-  source                      = "./logging"
-  persistent_storage          = true
-  persistent_storage_location = azurerm_resource_group.rg.location
-  persistent_storage_rg_name  = azurerm_resource_group.rg.name
-  persistent_storage_size_gi  = 100
-  openobserve_password        = data.azurerm_key_vault_secret.elasticsearch_password.value
-}
+#   source                      = "./logging"
+#   persistent_storage          = true
+#   persistent_storage_location = azurerm_resource_group.rg.location
+#   persistent_storage_rg_name  = azurerm_resource_group.rg.name
+#   persistent_storage_size_gi  = 100
+#   openobserve_password        = data.azurerm_key_vault_secret.elasticsearch_password.value
+# }
 
-module "bot_mod_dev" {
-  depends_on = [
-    module.mariadb
-  ]
+# module "bot_mod_dev" {
+#   depends_on = [
+#     module.mariadb
+#   ]
 
-  source = "./bots/"
+#   source = "./bots/"
 
-  bot_namespace = "bot-dev"
-  bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
-  bot_onMessage = "m"
-  db_database   = "polinetwork_test"
-  db_host       = local.mariadb_internal_ip
-  db_password   = data.azurerm_key_vault_secret.dev_db_password.value
-  db_user       = data.azurerm_key_vault_secret.dev_db_user.value
-}
+#   bot_namespace = "bot-dev"
+#   bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
+#   bot_onMessage = "m"
+#   db_database   = "polinetwork_test"
+#   db_host       = local.mariadb_internal_ip
+#   db_password   = data.azurerm_key_vault_secret.dev_db_password.value
+#   db_user       = data.azurerm_key_vault_secret.dev_db_user.value
+# }
 
 module "bot_mod_prod" {
   depends_on = [
@@ -182,7 +182,7 @@ module "aule_bot" {
   db_user       = data.azurerm_key_vault_secret.dev_db_user.value
 }
 
-module "bot_mat_prod" {
+module "bot_mat_migration" {
   depends_on = [
     module.mariadb
   ]
@@ -197,7 +197,7 @@ module "bot_mat_prod" {
   db_password                 = data.azurerm_key_vault_secret.prod_mat_db_password.value
   db_user                     = data.azurerm_key_vault_secret.prod_mat_db_user.value
   persistent_storage          = true
-  persistent_storage_size_gi  = "500"
+  persistent_storage_size_gi  = "250"
   persistent_storage_location = azurerm_resource_group.rg.location
   persistent_storage_rg_name  = azurerm_resource_group.rg.name
 
@@ -215,22 +215,22 @@ module "bot_mat_prod" {
 #   persistent_storage_rg_name = azurerm_resource_group.rg.name
 # }
 
-module "mc" {
-  depends_on = [
-    module.mariadb
-  ]
+# module "mc" {
+#   depends_on = [
+#     module.mariadb
+#   ]
 
-  source = "./mc/"
+#   source = "./mc/"
 
-  namespace    = "mcserver"
-  amp_password = data.azurerm_key_vault_secret.amp_password.value
-  amp_license  = data.azurerm_key_vault_secret.amp_license.value
+#   namespace    = "mcserver"
+#   amp_password = data.azurerm_key_vault_secret.amp_password.value
+#   amp_license  = data.azurerm_key_vault_secret.amp_license.value
 
-  persistent_storage          = true
-  persistent_storage_size_gi  = "50"
-  persistent_storage_location = azurerm_resource_group.rg.location
-  persistent_storage_rg_name  = azurerm_resource_group.rg.name
-}
+#   persistent_storage          = true
+#   persistent_storage_size_gi  = "50"
+#   persistent_storage_location = azurerm_resource_group.rg.location
+#   persistent_storage_rg_name  = azurerm_resource_group.rg.name
+# }
 
 
 module "keyvault" {
