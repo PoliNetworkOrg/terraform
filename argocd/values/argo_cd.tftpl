@@ -57,7 +57,7 @@ server:
     hosts: ["api.polinetwork.org"]
     annotations:
       "cert-manager.io/cluster-issuer": "letsencrypt-prod-issuer"
-      "kubernetes.io/ingress.class": "addon-http-application-routing"
+      "kubernetes.io/ingress.class": "webapprouting.kubernetes.azure.com"
       "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS"
     paths: ["/"]
     tls:

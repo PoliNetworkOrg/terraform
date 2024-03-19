@@ -15,7 +15,7 @@ grafana:
       - monitoring.polinetwork.org
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod-issuer
-      kubernetes.io/ingress.class: addon-http-application-routing
+      kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
       kubernetes.io/tls-acme: "true"
     path: /
     tls:

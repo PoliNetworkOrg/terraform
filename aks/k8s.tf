@@ -8,7 +8,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
   role_based_access_control_enabled = true
-  http_application_routing_enabled  = true
+  http_application_routing_enabled  = false // replaced by az aks approuting enable -g <ResourceGroupName> -n <ClusterName>
 
   azure_active_directory_role_based_access_control {
     managed            = true
@@ -69,28 +69,19 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
   min_count             = each.value.min_count
 }
 
-# resource "kubernetes_namespace" "nginx" {
-#   metadata {
-#     name = "nginx-ingress"
-#   }
-# }
-
-# resource "helm_release" "ingress-nginx" {
-#   name       = "ingress-nginx"
+# resource "helm_release" "nginx_ingress" {
+#   name       = "nginx-ingress"
 #   repository = "https://kubernetes.github.io/ingress-nginx"
 #   chart      = "ingress-nginx"
-#   namespace  = "nginx-ingress"
-
-#   cleanup_on_fail  = true
+#   namespace  = "kube-system"
+#   version    = "4.10.0"
 #   create_namespace = true
 
 #   values = [
 #     templatefile("${path.module}/values/ingress.yaml.tftpl", {
+#       public_ip_address = azurerm_public_ip.ingress_ip.ip_address,
+#       resource_group = var.rg_name
 #     })
-#   ]
-
-#   depends_on = [
-#     azurerm_kubernetes_cluster.k8s
 #   ]
 # }
 
