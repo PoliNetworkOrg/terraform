@@ -69,21 +69,20 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
   min_count             = each.value.min_count
 }
 
-# resource "helm_release" "nginx_ingress" {
-#   name       = "nginx-ingress"
-#   repository = "https://kubernetes.github.io/ingress-nginx"
-#   chart      = "ingress-nginx"
-#   namespace  = "kube-system"
-#   version    = "4.10.0"
-#   create_namespace = true
+resource "helm_release" "nginx_ingress" {
+  name       = "nginx-ingress"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress-nginx"
+  version    = "4.10.0"
+  create_namespace = true
 
-#   values = [
-#     templatefile("${path.module}/values/ingress.yaml.tftpl", {
-#       public_ip_address = azurerm_public_ip.ingress_ip.ip_address,
-#       resource_group = var.rg_name
-#     })
-#   ]
-# }
+  values = [
+    templatefile("${path.module}/values/ingress.yaml.tftpl", {
+      resource_group = var.rg_name
+    })
+  ]
+}
 
 
 resource "kubernetes_cluster_role_binding" "adminorg" {
