@@ -34,7 +34,7 @@ resource "kubernetes_manifest" "cluster-issuer" {
           {
             http01 = {
               ingress = {
-                class = "addon-http-application-routing",
+                class = "nginx",
               }
             }
           }
