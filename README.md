@@ -12,6 +12,7 @@ export ARM_ACCESS_KEY=$(az storage account keys list --resource-group rg-polinet
 if resource group or account name changes, change them accordingly
 
 ## TODO
+- [ ] fix secrets for ci gh workflows
 - [ ] clean unusued modules
 - [ ] upgrade providers to latest version (following migration guide)
 - [ ] better organization of the filebase
