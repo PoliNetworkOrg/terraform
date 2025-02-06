@@ -4,7 +4,6 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
 from reportlab.lib.pagesizes import letter, landscape
-from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet
 import os
@@ -56,11 +55,11 @@ cost_per_resource_df['Percentage'] = cost_per_resource_df['Cost'] / total_spendi
 # Create a new DataFrame with the "Others" category
 grouped_df = cost_per_resource_df[cost_per_resource_df['Percentage'] > threshold].copy()
 others = cost_per_resource_df[cost_per_resource_df['Percentage'] <= threshold]['Cost'].sum()
-grouped_df = grouped_df._append({'Resource': 'Others', 'Cost': others, 'Percentage': others / total_spending}, ignore_index=True)
+grouped_df = pd.concat([grouped_df, pd.DataFrame({'Resource': 'Others', 'Cost': others, 'Percentage': others / total_spending})], ignore_index=True)
 
 # Plot total cost per resource pie chart
 fig, ax = plt.subplots(figsize=figure_size, dpi=dpi)
-ax.pie(grouped_df['Cost'], labels=grouped_df['Resource'], autopct='%1.1f%%', startangle=90)
+ax.pie(grouped_df['Cost'], labels=grouped_df['Resource'].to_list(), autopct='%1.1f%%', startangle=90)
 ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
 plt.title('Spending Distribution Among Resources')
 plt.savefig('cost_distribution.png', dpi=dpi, bbox_inches='tight')  # Save the figure with adjusted bounding box
@@ -79,7 +78,7 @@ plt.savefig('daily_cost.png', dpi=dpi)
 
 # Plot resource usage
 plt.figure(figsize=figure_size, dpi=dpi)
-resource_usage_df.plot(kind='bar', x='Resource', y='Usage', legend=None, figsize=figure_size)
+resource_usage_df.plot(kind='bar', x='Resource', y='Usage', legend=False, figsize=figure_size)
 plt.xlabel('Resource')
 plt.ylabel('Usage')
 plt.title('Monthly Resource Usage')
@@ -90,7 +89,7 @@ plt.savefig('resource_usage.png', dpi=dpi)
 
 # Plot increased usage over time
 plt.figure(figsize=figure_size, dpi=dpi)
-increased_usage_df.plot(kind='bar', x='Resource', y='Increased Usage', legend=None, figsize=figure_size)
+increased_usage_df.plot(kind='bar', x='Resource', y='Increased Usage', legend=False, figsize=figure_size)
 plt.xlabel('Resource')
 plt.ylabel('Increased Usage')
 plt.title('Resource Usage Increase Over Time')
