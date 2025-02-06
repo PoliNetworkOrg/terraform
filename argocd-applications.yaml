@@ -1,0 +1,192 @@
+applications:
+  # - name: bot-dev
+  #   namespace: argocd
+  #   project: default
+  #   source:
+  #     repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+  #     targetRevision: HEAD
+  #     path: bot-dev
+  #     directory:
+  #       recurse: true
+  #   destination:
+  #     server: https://kubernetes.default.svc
+  #     namespace: bot-dev
+  #   syncPolicy:
+  #     automated:
+  #       prune: true
+  #       selfHeal: true
+  #     syncOptions:
+  #       - CreateNamespace=false
+  #   info:
+  #     - name: url
+  #       value: https://argoproj.github.io/
+  - name: bot-prod
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+      targetRevision: HEAD
+      path: bot-prod
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: bot-prod
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=false
+    info:
+      - name: url
+        value: https://argoproj.github.io/
+  - name: bot-mat
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+      targetRevision: HEAD
+      path: bot-mat
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: bot-mat
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=false
+        - Replace=true
+    info:
+      - name: url
+        value: https://argoproj.github.io/
+  - name: mariadb
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+      targetRevision: HEAD
+      path: mariadb
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: mariadb
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=false
+    info:
+      - name: url
+        value: https://argoproj.github.io/
+  - name: app-dev
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+      targetRevision: HEAD
+      path: app-dev
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: app-dev
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=false
+    info:
+      - name: url
+        value: https://argoproj.github.io/
+  # - name: polimi-tutorapp
+  #   namespace: argocd
+  #   project: default
+  #   source:
+  #     repoURL: https://github.com/poliNetworkOrg/polinetwork-ext-cd
+  #     targetRevision: HEAD
+  #     path: tutor-prod
+  #     directory:
+  #       recurse: true
+  #   destination:
+  #     server: https://kubernetes.default.svc
+  #     namespace: tutor-prod
+  #   syncPolicy:
+  #     automated:
+  #       prune: true
+  #       selfHeal: true
+  #     syncOptions:
+  #       - CreateNamespace=false
+  #   info:
+  #     - name: url
+  #       value: https://argoproj.github.io/
+  - name: aule-bot
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+      targetRevision: HEAD
+      path: bot-rooms
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: aulebot
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=false
+    info:
+      - name: url
+        value: https://argoproj.github.io/
+  # - name: logging
+  #   namespace: argocd
+  #   project: default
+  #   source:
+  #     repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+  #     targetRevision: HEAD
+  #     path: logging
+  #     directory:
+  #       recurse: true
+  #   destination:
+  #     server: https://kubernetes.default.svc
+  #     namespace: logging
+  #   syncPolicy:
+  #     automated:
+  #       prune: true
+  #       selfHeal: true
+  #     syncOptions:
+  #       - CreateNamespace=false
+  #   info:
+  #     - name: url
+  #       value: https://argoproj.github.io/
+
+  # - name: mc
+  #   namespace: argocd
+  #   project: default
+  #   source:
+  #     repoURL: https://github.com/poliNetworkOrg/polinetwork-cd
+  #     targetRevision: HEAD
+  #     path: mc
+  #     directory:
+  #       recurse: true
+  #   destination:
+  #     server: https://kubernetes.default.svc
+  #     namespace: mcserver
+  #   syncPolicy:
+  #     automated:
+  #       prune: true
+  #       selfHeal: true
+  #     syncOptions:
+  #       - CreateNamespace=false
+  #   info:
+  #   - name: url
+  #     value: https://argoproj.github.io/

@@ -1,0 +1,8 @@
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true
+    namespace: "monitoring"
+    labels:
+      release: prometheus
+installCRDs: true

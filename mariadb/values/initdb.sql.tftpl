@@ -1,0 +1,39 @@
+-- DELETE ALL USERS EXCEPT FOR ROOT AND LOCALHOST mysql STUFF
+CREATE DATABASE temp;
+
+CREATE TABLE temp.t1 (USER_ VARCHAR(1000), HOST_ VARCHAR(1000));
+
+DELIMITER //
+
+FOR i IN (SELECT User, Host FROM mysql.user WHERE USER != 'root' AND HOST != 'localhost')
+DO
+  INSERT INTO temp.t1 (user_,host_) VALUES (i.user, i.host);
+END FOR;
+
+FOR i IN (SELECT User_, Host_ FROM temp.t1)
+DO
+  EXECUTE IMMEDIATE CONCAT('DROP USER \'',i.User_, '\'@\'',i.Host_,'\';' );
+END FOR;
+
+//
+
+DELIMITER ;
+
+DROP TABLE temp.t1;
+
+DROP DATABASE temp;
+
+%{ for conf in db_config ~}
+
+-- CREATE NEW USERS
+CREATE USER IF NOT EXISTS '${conf.user}'@'%' IDENTIFIED BY '${conf.password}' ;
+
+
+-- CREATE DATABASES IF NOT ALREADY PRESENT
+
+CREATE DATABASE IF NOT EXISTS ${conf.database} CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_general_ci';
+
+-- GIVE PERMISSIONS TO BOTS
+GRANT ALL PRIVILEGES ON ${conf.database}.* TO '${conf.user}'@'%';
+
+%{ endfor ~}
