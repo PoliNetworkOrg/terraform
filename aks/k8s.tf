@@ -28,16 +28,16 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   }
 
   default_node_pool {
-    name                 = "userpool"
-    vm_size              = "Standard_B2ms"
-    os_disk_type         = "Managed"
-    os_disk_size_gb      = 30
-    orchestrator_version = var.kubernetes_orchestrator_version
-    enable_auto_scaling  = true
-    max_count            = 1
-    min_count            = 1
-    node_count           = 1
-    temporary_name_for_rotation = "temp" 
+    name                        = "userpool"
+    vm_size                     = "Standard_B2ms"
+    os_disk_type                = "Managed"
+    os_disk_size_gb             = 30
+    orchestrator_version        = var.kubernetes_orchestrator_version
+    enable_auto_scaling         = true
+    max_count                   = 1
+    min_count                   = 1
+    node_count                  = 1
+    temporary_name_for_rotation = "temp"
   }
 
   linux_profile {
@@ -70,11 +70,11 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
 }
 
 resource "helm_release" "nginx_ingress" {
-  name       = "nginx-ingress"
-  repository = "https://kubernetes.github.io/ingress-nginx"
-  chart      = "ingress-nginx"
-  namespace  = "ingress-nginx"
-  version    = "4.10.0"
+  name             = "nginx-ingress"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  namespace        = "ingress-nginx"
+  version          = "4.10.0"
   create_namespace = true
 
   values = [

@@ -5,7 +5,7 @@ resource "kubernetes_secret" "telegram_secret" {
   }
 
   data = {
-      NAME = ""
+    NAME = ""
   }
 }
 
