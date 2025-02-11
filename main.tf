@@ -55,12 +55,6 @@ module "argo-cd" {
   ]
 }
 
-module "gh-runner" {
-  source           = "./gh-runner/"
-  runner_namespace = "gh-runner"
-  runner_token     = data.azurerm_key_vault_secret.gh_runner_token.value
-}
-
 module "app_dev" {
   depends_on = [
     module.mariadb
@@ -74,24 +68,6 @@ module "app_dev" {
   db_host          = local.mariadb_internal_ip
   db_password      = data.azurerm_key_vault_secret.dev_db_password.value
   db_user          = data.azurerm_key_vault_secret.dev_db_user.value
-}
-
-module "tutorapp" {
-  depends_on = [
-    module.mariadb
-  ]
-
-  source             = "./tutorapp/"
-  secretAuthUser     = data.azurerm_key_vault_secret.prod_tutorapp_auth_user.value
-  secretAuthPassword = data.azurerm_key_vault_secret.prod_tutorapp_auth_password.value
-  tutorapp_namespace = "tutor-prod"
-  bot_token          = data.azurerm_key_vault_secret.prod_tutorapp_bot_token.value
-  db_database        = "polimi_tutorapp"
-  db_host            = local.mariadb_internal_ip
-  db_user            = data.azurerm_key_vault_secret.prod_tutorapp_db_user.value
-  db_password        = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
-  azureSecret        = data.azurerm_key_vault_secret.prod_tutorapp_azure_secret.value
-  azureClientId      = data.azurerm_key_vault_secret.prod_tutorapp_azure_clientid.value
 }
 
 module "monitoring" {
@@ -204,34 +180,6 @@ module "bot_mat_migration" {
   material_password = data.azurerm_key_vault_secret.dev_mat_config_password.value
   material_root_dir = "/Repos/"
 }
-
-# module "telegramserver" {
-#   source = "./telegramserver/"
-
-#   location                   = azurerm_resource_group.rg.location
-#   rg_name                    = azurerm_resource_group.rg.name
-#   persistent_storage         = true
-#   persistent_storage_size_gi = "20"
-#   persistent_storage_rg_name = azurerm_resource_group.rg.name
-# }
-
-# module "mc" {
-#   depends_on = [
-#     module.mariadb
-#   ]
-
-#   source = "./mc/"
-
-#   namespace    = "mcserver"
-#   amp_password = data.azurerm_key_vault_secret.amp_password.value
-#   amp_license  = data.azurerm_key_vault_secret.amp_license.value
-
-#   persistent_storage          = true
-#   persistent_storage_size_gi  = "50"
-#   persistent_storage_location = azurerm_resource_group.rg.location
-#   persistent_storage_rg_name  = azurerm_resource_group.rg.name
-# }
-
 
 module "keyvault" {
   source = "./keyvault/"
