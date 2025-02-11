@@ -243,11 +243,6 @@ module "mariadb" {
       database = "polinetwork_app_dev"
     },
     {
-      user     = data.azurerm_key_vault_secret.prod_tutorapp_db_user.value
-      password = data.azurerm_key_vault_secret.prod_tutorapp_db_password.value
-      database = "polimi_tutorapp"
-    },
-    {
       user     = data.azurerm_key_vault_secret.dev_newbot_db_user.value
       password = data.azurerm_key_vault_secret.dev_newbot_db_password.value
       database = "polinetwork_newbot_dev"

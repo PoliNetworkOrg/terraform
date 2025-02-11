@@ -19,17 +19,6 @@ data "azurerm_key_vault_secret" "dev_aule_bot_token" {
   key_vault_id = module.keyvault.key_vault_id
 }
 
-
-data "azurerm_key_vault_secret" "prod_tutorapp_azure_secret" {
-  name         = "prod-tutorapp-azure-secret"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "prod_tutorapp_azure_clientid" {
-  name         = "prod-tutorapp-azure-client-id"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
 data "azurerm_key_vault_secret" "prod_mod_git_email" {
   name         = "prod-mod-git-email"
   key_vault_id = module.keyvault.key_vault_id
@@ -63,31 +52,6 @@ data "azurerm_key_vault_secret" "argocd_client_secret" {
 
 data "azurerm_key_vault_secret" "argocd_client_id" {
   name         = "argocd-client-id"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "prod_tutorapp_auth_user" {
-  name         = "prod-tutorapp-auth-user"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "prod_tutorapp_auth_password" {
-  name         = "prod-tutorapp-auth-password"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "prod_tutorapp_db_user" {
-  name         = "prod-tutorapp-db-user"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "prod_tutorapp_bot_token" {
-  name         = "prod-tutorapp-bot-token"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "prod_tutorapp_db_password" {
-  name         = "prod-tutorapp-db-password"
   key_vault_id = module.keyvault.key_vault_id
 }
 
