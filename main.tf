@@ -55,6 +55,12 @@ module "argo-cd" {
   ]
 }
 
+module "gh-runner" {
+  source           = "./gh-runner/"
+  runner_namespace = "gh-runner"
+  runner_token     = data.azurerm_key_vault_secret.gh_runner_token.value
+}
+
 module "app_dev" {
   depends_on = [
     module.mariadb
