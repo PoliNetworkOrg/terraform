@@ -13,7 +13,7 @@ if resource group or account name changes, change them accordingly
 
 ## TODO
 - [x] fix secrets for ci gh workflows
-- [ ] clean unusued modules
+- [x] clean unusued modules
 - [ ] upgrade providers to latest version (following migration guide)
 - [ ] better organization of the filebase
 - [x] double check that the backend is working correctly and that the saved state is as the real state 
