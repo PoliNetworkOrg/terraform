@@ -1,4 +1,3 @@
-
 data "azurerm_key_vault_secret" "amp_password" {
   name         = "mc-amp-password"
   key_vault_id = module.keyvault.key_vault_id
@@ -42,6 +41,11 @@ data "azurerm_key_vault_secret" "ca_tls_crt" {
 
 data "azurerm_key_vault_secret" "ca_tls_key" {
   name         = "ca-key"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "cloudflare_tunnel_token" {
+  name         = "cloudflare-tunnel-token"
   key_vault_id = module.keyvault.key_vault_id
 }
 

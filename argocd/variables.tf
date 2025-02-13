@@ -19,4 +19,3 @@ variable "clientSecret" {
 variable "tenant" {
   type = string
 }
-

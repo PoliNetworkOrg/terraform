@@ -55,6 +55,15 @@ module "argo-cd" {
   ]
 }
 
+module "cloudflare" {
+  depends_on = [
+    module.aks
+  ]
+
+  source       = "./cloudflare/"
+  tunnel_token = data.azurerm_key_vault_secret.cloudflare_tunnel_token.value
+}
+
 module "gh-runner" {
   source           = "./gh-runner/"
   runner_namespace = "gh-runner"
