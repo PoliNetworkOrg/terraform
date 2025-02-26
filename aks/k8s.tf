@@ -10,6 +10,10 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   role_based_access_control_enabled = true
   http_application_routing_enabled  = false // replaced by az aks approuting enable -g <ResourceGroupName> -n <ClusterName>
 
+  key_vault_secrets_provider {
+    secret_rotation_enabled = true
+  }
+
   azure_active_directory_role_based_access_control {
     managed            = true
     azure_rbac_enabled = true
