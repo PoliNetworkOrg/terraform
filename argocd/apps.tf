@@ -26,74 +26,74 @@ resource "helm_release" "argo_cd" {
   ]
 }
 
-#resource "kubernetes_manifest" "git_generator_applicationset" {
-#  manifest = {
-#    apiVersion = "argoproj.io/v1alpha1"
-#    kind       = "ApplicationSet"
-#    metadata = {
-#      name      = "git-generator-app-set"
-#      namespace = var.namespace
-#    }
-#    spec = {
-#      generators = [
-#        {
-#          git = {
-#            repoURL  = "https://github.com/PoliNetworkOrg/polinetwork-cd.git"
-#            revision = "generator"
-#            files = [
-#              {
-#                path = "**/config.json"
-#              }
-#            ]
-#          }
-#        }
-#      ]
-#      ignoreApplicationDifferences = [
-#        {
-#          jsonPointers = [
-#            "/spec/source/kustomize/images"
-#          ]
-#        }
-#      ]
-#      template = {
-#        metadata = {
-#          name = "{{path.basename}}"
-#          annotations = {
-#            "argocd-image-updater.argoproj.io/write-back-method" = "argocd"
-#            "argocd-image-updater.argoproj.io/argocd.force-update" = "true"
-#            "argocd-image-updater.argoproj.io/image-list" = "{{image.image-list}}" 
-#            "argocd-image-updater.argoproj.io/update-strategy" = "{{image.update-strategy}}"
-#          }
-#        }
-#        spec = {
-#          project = "default"
-#          source = {
-#            repoURL  = "https://github.com/PoliNetworkOrg/polinetwork-cd.git"
-#            targetRevision = "generator"
-#            path           = "{{path.basename}}/app"
-#          }
-#          destination = {
-#            server    = "https://kubernetes.default.svc"
-#            namespace = "{{path.basename}}"
-#          }
-#          syncPolicy = {
-#            automated = {
-#              prune    = true
-#              selfHeal = true
-#            }
-#            syncOptions = [
-#              "CreateNamespace=true"
-#            ]
-#          }
-#        }
-#      }
-#    }
-#  }
-#
-#  depends_on = [
-#    helm_release.argo_cd
-#  ]
-#}
+resource "kubernetes_manifest" "git_generator_applicationset" {
+  manifest = {
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "ApplicationSet"
+    metadata = {
+      name      = "git-generator-app-set"
+      namespace = var.namespace
+    }
+    spec = {
+      generators = [
+        {
+          git = {
+            repoURL  = "https://github.com/PoliNetworkOrg/polinetwork-cd.git"
+            revision = "generator"
+            files = [
+              {
+                path = "**/config.json"
+              }
+            ]
+          }
+        }
+      ]
+      ignoreApplicationDifferences = [
+        {
+          jsonPointers = [
+            "/spec/source/kustomize/images"
+          ]
+        }
+      ]
+      template = {
+        metadata = {
+          name = "{{path.basename}}"
+          annotations = {
+            "argocd-image-updater.argoproj.io/write-back-method" = "argocd"
+            "argocd-image-updater.argoproj.io/argocd.force-update" = "true"
+            "argocd-image-updater.argoproj.io/image-list" = "{{image.image-list}}" 
+            "argocd-image-updater.argoproj.io/update-strategy" = "{{image.update-strategy}}"
+          }
+        }
+        spec = {
+          project = "default"
+          source = {
+            repoURL  = "https://github.com/PoliNetworkOrg/polinetwork-cd.git"
+            targetRevision = "generator"
+            path           = "{{path.basename}}/app"
+          }
+          destination = {
+            server    = "https://kubernetes.default.svc"
+            namespace = "{{path.basename}}"
+          }
+          syncPolicy = {
+            automated = {
+              prune    = true
+              selfHeal = true
+            }
+            syncOptions = [
+              "CreateNamespace=true"
+            ]
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.argo_cd
+  ]
+}
 
 resource "helm_release" "argocd_apps" {
   name       = "argocd-apps"
