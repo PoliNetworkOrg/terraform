@@ -20,7 +20,8 @@ applications:
   #   info:
   #     - name: url
   #       value: https://argoproj.github.io/
-  - name: bot-prod
+  bot-prod:
+    name: bot-prod
     namespace: argocd
     project: default
     source:
@@ -41,7 +42,8 @@ applications:
     info:
       - name: url
         value: https://argoproj.github.io/
-  - name: bot-mat
+  bot-mat:
+    name: bot-mat
     namespace: argocd
     project: default
     source:
@@ -63,7 +65,8 @@ applications:
     info:
       - name: url
         value: https://argoproj.github.io/
-  - name: mariadb
+  mariadb:
+    name: mariadb
     namespace: argocd
     project: default
     source:
@@ -84,7 +87,8 @@ applications:
     info:
       - name: url
         value: https://argoproj.github.io/
-  - name: app-dev
+  app-dev:
+    name: app-dev
     namespace: argocd
     project: default
     source:
@@ -105,7 +109,8 @@ applications:
     info:
       - name: url
         value: https://argoproj.github.io/
-  - name: aule-bot
+  aule-bot:
+    name: aule-bot
     namespace: argocd
     project: default
     source:
