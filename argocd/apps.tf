@@ -47,6 +47,7 @@ resource "kubernetes_manifest" "argocd_git_generator_applicationset" {
   ]
 }
 
+
 resource "helm_release" "argocd_apps" {
   name       = "argocd-apps"
   repository = "https://argoproj.github.io/argo-helm"
