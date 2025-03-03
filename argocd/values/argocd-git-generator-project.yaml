@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: git-generator
+  namespace: ${namespace}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: "Apps generated from GitHub repository PoliNetworkOrg/polinetwork-cd"
+  destinations:
+    - namespace: "*"
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - https://github.com/PoliNetworkOrg/polinetwork-cd.git
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"

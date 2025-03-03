@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: argocd-git-generator
+  namespace: ${namespace}
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        requeueAfterSeconds: 1800 # we have a webhook, so we can set high polling rate
+        repoURL: https://github.com/PoliNetworkOrg/polinetwork-cd.git
+        revision: HEAD
+        files:
+          - path: "**/config.json"
+  ignoreApplicationDifferences:
+    - jsonPointers:
+        - "/spec/source/kustomize/images"
+  template:
+    metadata:
+      name: "{{ .path.basename }}"
+      annotations:
+        '{{- if hasKey . "image" }}argocd-image-updater.argoproj.io/write-back-method{{- else }}image-updater-config{{- end }}': '{{ if hasKey . "image" }}argocd{{- else }}unset{{- end}}'
+        '{{- if hasKey . "image" }}argocd-image-updater.argoproj.io/force-update{{- else }}image-updater-config{{- end }}': '{{ if hasKey . "image" }}true{{- else }}unset{{- end}}'
+        '{{- if hasKey . "image" }}argocd-image-updater.argoproj.io/image-list{{- else }}image-updater-config{{- end }}': '{{ dig "image" "image_list" "unset" . }}'
+        '{{- if hasKey . "image" }}argocd-image-updater.argoproj.io/update-strategy{{- else }}image-updater-config{{- end }}': '{{ dig "image" "update_strategy" "unset" . }}'
+    spec:
+      project: "git-generator"
+      source:
+        repoURL: https://github.com/PoliNetworkOrg/polinetwork-cd.git
+        targetRevision: HEAD
+        path: "{{ .path.path }}/src"
+      destination:
+        server: "https://kubernetes.default.svc"
+        namespace: "{{ .path.basename }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - "CreateNamespace=true"
