@@ -122,22 +122,6 @@ module "bot_mod_prod" {
   git_path        = "./data/polinetworkWebsiteData/"
 }
 
-module "aule_bot" {
-  depends_on = [
-    module.mariadb
-  ]
-
-  source = "./modules/bots/"
-
-  bot_namespace = "aulebot"
-  bot_token     = data.azurerm_key_vault_secret.dev_aule_bot_token.value
-  bot_onMessage = "au"
-  db_database   = "polinetwork_test"
-  db_host       = local.mariadb_internal_ip
-  db_password   = data.azurerm_key_vault_secret.dev_db_password.value
-  db_user       = data.azurerm_key_vault_secret.dev_db_user.value
-}
-
 module "bot_mat_migration" {
   depends_on = [
     module.mariadb
