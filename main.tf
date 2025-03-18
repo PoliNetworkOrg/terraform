@@ -16,7 +16,7 @@ locals {
 }
 
 module "aks" {
-  source = "./aks/"
+  source = "./modules/aks/"
 
   ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key.value
   ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt.value
@@ -45,7 +45,7 @@ module "argo-cd" {
     module.aks
   ]
 
-  source       = "./argocd/"
+  source       = "./modules/argocd/"
   clientId     = data.azurerm_key_vault_secret.argocd_client_id.value
   clientSecret = data.azurerm_key_vault_secret.argocd_client_secret.value
   tenant       = data.azurerm_client_config.current.tenant_id
@@ -60,14 +60,8 @@ module "cloudflare" {
     module.aks
   ]
 
-  source       = "./cloudflare/"
+  source       = "./modules/cloudflare/"
   tunnel_token = data.azurerm_key_vault_secret.cloudflare_tunnel_token.value
-}
-
-module "gh-runner" {
-  source           = "./gh-runner/"
-  runner_namespace = "gh-runner"
-  runner_token     = data.azurerm_key_vault_secret.gh_runner_token.value
 }
 
 module "app_dev" {
@@ -75,7 +69,7 @@ module "app_dev" {
     module.mariadb
   ]
 
-  source = "./app/"
+  source = "./modules/app/"
 
   app_namespace    = "app-dev"
   app_secret_token = data.azurerm_key_vault_secret.dev_app_secret_token.value
@@ -90,7 +84,7 @@ module "monitoring" {
     module.aks
   ]
 
-  source = "./monitoring/"
+  source = "./modules/monitoring/"
 
   namespace = "monitoring"
 
@@ -104,41 +98,12 @@ module "monitoring" {
   persistent_storage_rg_name  = azurerm_resource_group.rg.name
 }
 
-# module "monitoring-logging" {
-#   depends_on = [
-#     module.aks
-#   ]
-
-#   source                      = "./logging"
-#   persistent_storage          = true
-#   persistent_storage_location = azurerm_resource_group.rg.location
-#   persistent_storage_rg_name  = azurerm_resource_group.rg.name
-#   persistent_storage_size_gi  = 100
-#   openobserve_password        = data.azurerm_key_vault_secret.elasticsearch_password.value
-# }
-
-# module "bot_mod_dev" {
-#   depends_on = [
-#     module.mariadb
-#   ]
-
-#   source = "./bots/"
-
-#   bot_namespace = "bot-dev"
-#   bot_token     = data.azurerm_key_vault_secret.dev_mod_bot_token.value
-#   bot_onMessage = "m"
-#   db_database   = "polinetwork_test"
-#   db_host       = local.mariadb_internal_ip
-#   db_password   = data.azurerm_key_vault_secret.dev_db_password.value
-#   db_user       = data.azurerm_key_vault_secret.dev_db_user.value
-# }
-
 module "bot_mod_prod" {
   depends_on = [
     module.mariadb
   ]
 
-  source = "./bots/"
+  source = "./modules/bots/"
 
   bot_namespace = "bot-prod"
   bot_token     = data.azurerm_key_vault_secret.prod_mod_bot_token.value
@@ -157,28 +122,12 @@ module "bot_mod_prod" {
   git_path        = "./data/polinetworkWebsiteData/"
 }
 
-module "aule_bot" {
-  depends_on = [
-    module.mariadb
-  ]
-
-  source = "./bots/"
-
-  bot_namespace = "aulebot"
-  bot_token     = data.azurerm_key_vault_secret.dev_aule_bot_token.value
-  bot_onMessage = "au"
-  db_database   = "polinetwork_test"
-  db_host       = local.mariadb_internal_ip
-  db_password   = data.azurerm_key_vault_secret.dev_db_password.value
-  db_user       = data.azurerm_key_vault_secret.dev_db_user.value
-}
-
 module "bot_mat_migration" {
   depends_on = [
     module.mariadb
   ]
 
-  source = "./bots/"
+  source = "./modules/bots/"
 
   bot_namespace               = "bot-mat"
   bot_token                   = data.azurerm_key_vault_secret.prod_mat_token.value
@@ -197,7 +146,7 @@ module "bot_mat_migration" {
 }
 
 module "keyvault" {
-  source = "./keyvault/"
+  source = "./modules/keyvault/"
 
   name = "kv-polinetwork"
 
@@ -210,7 +159,7 @@ module "keyvault" {
 }
 
 module "storageaccount" {
-  source = "./storage"
+  source = "./modules/storage"
 
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
@@ -223,7 +172,7 @@ module "mariadb" {
     module.argo-cd
   ]
 
-  source = "./mariadb/"
+  source = "./modules/mariadb/"
 
   db_config = [
     {
