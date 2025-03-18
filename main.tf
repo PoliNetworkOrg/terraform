@@ -36,7 +36,7 @@ module "aks" {
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
-  kubernetes_orchestrator_version = "1.26.3"
+  kubernetes_orchestrator_version = "1.32.0"
 
 }
 
@@ -53,6 +53,15 @@ module "argo-cd" {
   applications = [
     file("./argocd-applications.yaml")
   ]
+}
+
+module "aule_bot" {
+  depends_on = [
+    module.mariadb
+  ]
+
+  source = "./modules/bots-migration/"
+  bot_namespace = "bot-rooms"
 }
 
 module "cloudflare" {
@@ -127,22 +136,13 @@ module "bot_mat_migration" {
     module.mariadb
   ]
 
-  source = "./modules/bots/"
+  source = "./modules/bots-migration/"
 
   bot_namespace               = "bot-mat"
-  bot_token                   = data.azurerm_key_vault_secret.prod_mat_token.value
-  bot_onMessage               = "mat"
-  db_database                 = "polinetwork_materials"
-  db_host                     = local.mariadb_internal_ip
-  db_password                 = data.azurerm_key_vault_secret.prod_mat_db_password.value
-  db_user                     = data.azurerm_key_vault_secret.prod_mat_db_user.value
   persistent_storage          = true
   persistent_storage_size_gi  = "250"
   persistent_storage_location = azurerm_resource_group.rg.location
   persistent_storage_rg_name  = azurerm_resource_group.rg.name
-
-  material_password = data.azurerm_key_vault_secret.dev_mat_config_password.value
-  material_root_dir = "/Repos/"
 }
 
 module "keyvault" {
