@@ -36,7 +36,7 @@ module "aks" {
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
-  kubernetes_orchestrator_version = "1.32.0"
+  kubernetes_orchestrator_version = "1.29.13"
 
 }
 
