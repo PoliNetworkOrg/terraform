@@ -36,7 +36,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     os_disk_type                = "Managed"
     os_disk_size_gb             = 30
     orchestrator_version        = var.kubernetes_orchestrator_version
-    auto_scaling_enabled         = true
+    auto_scaling_enabled        = true
     max_count                   = 1
     min_count                   = 1
     node_count                  = 1

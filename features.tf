@@ -1,5 +1,5 @@
 provider "azurerm" {
   features {}
   resource_provider_registrations = "core"
-  use_oidc                   = true
+  use_oidc                        = true
 }

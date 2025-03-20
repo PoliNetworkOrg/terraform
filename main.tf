@@ -16,8 +16,8 @@ locals {
 }
 
 module "aks" {
-  depends_on = [ module.keyvault ]
-  source = "./modules/aks/"
+  depends_on = [module.keyvault]
+  source     = "./modules/aks/"
 
   ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key.value
   ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt.value
@@ -35,7 +35,7 @@ module "aks" {
   ]
 
   rg_location = azurerm_resource_group.rg.location
-  rg_name  = azurerm_resource_group.rg.name
+  rg_name     = azurerm_resource_group.rg.name
 
   kubernetes_orchestrator_version = "1.29.13"
 
@@ -61,7 +61,7 @@ module "aule_bot" {
     module.mariadb
   ]
 
-  source = "./modules/bots-migration/"
+  source        = "./modules/bots-migration/"
   bot_namespace = "bot-rooms"
 }
 

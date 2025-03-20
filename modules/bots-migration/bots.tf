@@ -2,7 +2,7 @@ resource "random_uuid" "volume" {
 }
 
 resource "kubernetes_namespace" "bot-namespace" {
-  
+
   metadata {
     name = var.bot_namespace
   }
