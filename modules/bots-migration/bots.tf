@@ -2,49 +2,9 @@ resource "random_uuid" "volume" {
 }
 
 resource "kubernetes_namespace" "bot-namespace" {
+
   metadata {
     name = var.bot_namespace
-  }
-}
-
-resource "kubernetes_secret" "bot_secret" {
-  metadata {
-    name      = "bot-config-secret"
-    namespace = var.bot_namespace
-  }
-
-  data = {
-    "bots_info.json" = jsonencode({
-      "bots" : [
-        {
-          botTypeApi             = 1,
-          token                  = var.bot_token,
-          website                = null,
-          contactString          = null,
-          onMessages             = var.bot_onMessage,
-          acceptedMessages       = true,
-          SessionUserId          = null,
-          userId                 = null,
-          apiId                  = null,
-          apiHash                = null,
-          NumberCountry          = null,
-          NumberNumber           = null,
-          passwordToAuthenticate = null,
-          method                 = null
-        }
-      ]
-    })
-    "dbconfig.json" = jsonencode({
-      Database = var.db_database,
-      Host     = var.db_host,
-      Password = var.db_password,
-      Port     = 3306,
-      User     = var.db_user
-    })
-    "materialbotconfig.json" = jsonencode({
-      Password = var.material_password,
-      RootDir  = var.material_root_dir,
-    })
   }
 }
 

@@ -1,4 +1,4 @@
-variable "location" {
+variable "rg_location" {
   type     = string
   nullable = false
 }
