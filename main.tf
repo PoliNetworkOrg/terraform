@@ -16,6 +16,7 @@ locals {
 }
 
 module "aks" {
+  depends_on = [ module.keyvault ]
   source = "./modules/aks/"
 
   ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key.value
@@ -33,7 +34,7 @@ module "aks" {
     }
   ]
 
-  location = azurerm_resource_group.rg.location
+  rg_location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
   kubernetes_orchestrator_version = "1.29.13"

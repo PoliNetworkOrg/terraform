@@ -3,10 +3,10 @@ data "azurerm_subscription" "primary" {
 
 # tfsec:ignore:azure-container-limit-authorized-ips
 resource "azurerm_kubernetes_cluster" "k8s" {
-  location                          = "westeurope"
   name                              = "aks-polinetwork"
-  resource_group_name               = var.rg_name
   dns_prefix                        = "aks-polinetwork"
+  location                          = var.rg_location
+  resource_group_name               = var.rg_name
   role_based_access_control_enabled = true
   http_application_routing_enabled  = false // replaced by az aks approuting enable -g <ResourceGroupName> -n <ClusterName>
 
