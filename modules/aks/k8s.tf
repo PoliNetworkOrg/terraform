@@ -15,7 +15,6 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   }
 
   azure_active_directory_role_based_access_control {
-    managed            = true
     azure_rbac_enabled = true
     admin_group_object_ids = [
       "57561933-3873-400d-be92-cdad68d57c1f",
@@ -37,7 +36,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     os_disk_type                = "Managed"
     os_disk_size_gb             = 30
     orchestrator_version        = var.kubernetes_orchestrator_version
-    enable_auto_scaling         = true
+    auto_scaling_enabled         = true
     max_count                   = 1
     min_count                   = 1
     node_count                  = 1
@@ -68,7 +67,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
   mode                  = each.value.mode == null ? "User" : each.value.mode
   tags                  = each.value.tags
   orchestrator_version  = var.kubernetes_orchestrator_version
-  enable_auto_scaling   = each.value.enable_auto_scaling
+  auto_scaling_enabled  = each.value.enable_auto_scaling
   max_count             = each.value.max_count
   min_count             = each.value.min_count
 }
