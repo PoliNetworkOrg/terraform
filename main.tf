@@ -113,7 +113,7 @@ module "bot_mod_prod" {
     module.mariadb
   ]
 
-  source = "./modules/bots-migration/"
+  source        = "./modules/bots-migration/"
   bot_namespace = "bot-prod"
 }
 
