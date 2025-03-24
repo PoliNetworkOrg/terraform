@@ -113,23 +113,8 @@ module "bot_mod_prod" {
     module.mariadb
   ]
 
-  source = "./modules/bots/"
-
+  source = "./modules/bots-migration/"
   bot_namespace = "bot-prod"
-  bot_token     = data.azurerm_key_vault_secret.prod_mod_bot_token.value
-  bot_onMessage = "m"
-  db_database   = "polinetwork"
-  db_host       = local.mariadb_internal_ip
-  db_password   = data.azurerm_key_vault_secret.prod_db_password.value
-  db_user       = data.azurerm_key_vault_secret.prod_mod_db_user.value
-
-  git_config      = true
-  git_user        = "PoliNetworkDev"
-  git_email       = data.azurerm_key_vault_secret.prod_mod_git_email.value
-  git_password    = data.azurerm_key_vault_secret.prod_mod_git_password.value
-  git_data_repo   = "git@github.com:PoliNetworkDev/polinetworkWebsiteData.git"
-  git_remote_repo = "https://github.com/PoliNetworkOrg/polinetworkWebsiteData.git"
-  git_path        = "./data/polinetworkWebsiteData/"
 }
 
 module "bot_mat_migration" {
