@@ -10,9 +10,10 @@ data "http" "myip" {
 }
 
 locals {
-  my_ip               = "${chomp(data.http.myip.response_body)}/32"
-  elia-ip             = "185.178.95.235/32"
-  mariadb_internal_ip = "mariadb-service.mariadb.svc.cluster.local"
+  my_ip                = "${chomp(data.http.myip.response_body)}/32"
+  elia-ip              = "185.178.95.235/32"
+  mariadb_internal_ip  = "mariadb-service.mariadb.svc.cluster.local"
+  postgres_internal_ip = "postgres-service.postgres.svc.cluster.local"
 }
 
 module "aks" {
@@ -200,3 +201,15 @@ module "mariadb" {
   rg_name  = azurerm_resource_group.rg.name
 }
 
+module "postgres" {
+  depends_on = [
+    module.aks,
+    module.argo-cd
+  ]
+
+  source               = "./modules/postgres/"
+  postgres_internal_ip = local.postgres_internal_ip
+
+  location = azurerm_resource_group.rg.location
+  rg_name  = azurerm_resource_group.rg.name
+}
