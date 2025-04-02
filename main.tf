@@ -201,6 +201,16 @@ module "mariadb" {
   rg_name  = azurerm_resource_group.rg.name
 }
 
+module "longhorn" {
+  depends_on = [
+    module.aks,
+    module.argo-cd
+  ]
+  source      = "./modules/longhorn/"
+  rg_location = azurerm_resource_group.rg.location
+  rg_name     = azurerm_resource_group.rg.name
+}
+
 module "postgres" {
   depends_on = [
     module.aks,
