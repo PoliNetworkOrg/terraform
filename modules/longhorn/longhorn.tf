@@ -11,7 +11,7 @@ resource "kubernetes_namespace" "longhorn" {
 resource "helm_release" "longhorn" {
   name       = "longhorn"
   repository = "https://charts.longhorn.io"
-  chart      = "longhorn/longhorn"
+  chart      = "longhorn"
   version    = "1.8.1"
 
   namespace = local.namespace
