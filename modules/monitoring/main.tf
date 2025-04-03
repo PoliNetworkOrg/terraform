@@ -27,6 +27,5 @@ resource "helm_release" "prometheus-stack" {
 
   depends_on = [
     kubernetes_namespace.namespace,
-    kubernetes_persistent_volume_claim.storage_pvc
   ]
 }

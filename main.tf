@@ -102,7 +102,7 @@ module "monitoring" {
   cluster_monitoring_app_password   = data.azurerm_key_vault_secret.cluster_monitoring_app_password.value
   cluster_monitoring_telegram_token = data.azurerm_key_vault_secret.cluster_monitoring_telegram_token.value
 
-  grafana_admin_password      = data.azurerm_key_vault_secret.grafana_admin_password.value
+  grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
 }
 
 module "bot_mod_prod" {

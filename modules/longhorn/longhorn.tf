@@ -17,7 +17,7 @@ resource "helm_release" "longhorn" {
   namespace = local.namespace
 
   set {
-    name = "defaultSettings.defaultReplicaCount"
+    name  = "defaultSettings.defaultReplicaCount"
     value = "1"
   }
 }
