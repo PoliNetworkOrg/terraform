@@ -5,26 +5,11 @@ configs:
   repositoriesAnnotations:
     managed-by: argocd.argoproj.io
   cm:
-    url: https://api.polinetwork.org
-    "dex.config": |
-      logger:
-        level: debug
-        format: json
-      connectors:
-      - type: microsoft
-        # Required field for connector id.
-        id: microsoft
-        # Required field for connector name.
-        name: Microsoft
-        config:
-          # Credentials can be string literals or pulled from the environment.
-          clientId: ${clientId}
-          clientSecret: ${clientSecret}
-          redirectURI: http://127.0.0.1:5556/dex/callback
-          tenant: ${tenant}
+    url: https://argocd.polinetwork.org
+    "users.anonymous.enabled": true
 
   rbac:
-    "policy.default": role:''
+    "policy.default": 'role:admin'
     "policy.csv": |
       p, role:org-admin, applications, *, */*, allow
       p, role:org-admin, clusters, get, *, allow
@@ -55,16 +40,3 @@ server:
     limits:
       cpu: "200m"
       memory: "600Mi"
-  ingress:
-    enabled: true
-    hostname: "api.polinetwork.org"
-    ingressClassName: nginx
-    annotations:
-      "cert-manager.io/cluster-issuer": "letsencrypt-prod-issuer"
-      "nginx.ingress.kubernetes.io/ssl-passthrough": "true"
-      "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS"
-    path: "/"
-    extraTls:
-      - hosts:
-          - "api.polinetwork.org"
-        secretName: "argocd-secret"
