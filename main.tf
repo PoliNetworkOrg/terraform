@@ -103,10 +103,6 @@ module "monitoring" {
   cluster_monitoring_telegram_token = data.azurerm_key_vault_secret.cluster_monitoring_telegram_token.value
 
   grafana_admin_password      = data.azurerm_key_vault_secret.grafana_admin_password.value
-  persistent_storage          = true
-  persistent_storage_size_gi  = "10"
-  persistent_storage_location = azurerm_resource_group.rg.location
-  persistent_storage_rg_name  = azurerm_resource_group.rg.name
 }
 
 module "bot_mod_prod" {

@@ -25,25 +25,28 @@ grafana:
   persistence:
     enabled: true
     type: pvc
-    existingClaim: grafana-pvc
+    storageClassName: "longhorn-static"
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
 
 prometheus:
   prometheusSpec:
-    retention: 5d
+    retention: 30d
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: managed-csi
+          storageClassName: longhorn-static
           accessModes:
             - ReadWriteOnce
           resources:
             requests:
-              storage: 32Gi
+              storage: 12Gi
     resources:
       limits:
-        memory: 1500Mi
-      requests:
         memory: 700Mi
+      requests:
+        memory: 100Mi
 
 alertmanager:
   config:
