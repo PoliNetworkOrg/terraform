@@ -18,11 +18,7 @@ resource "helm_release" "argo_cd" {
   upgrade_install  = true
 
   values = [
-    templatefile("${path.module}/values/argo_cd.tftpl", {
-      clientId     = var.clientId
-      clientSecret = var.clientSecret
-      tenant       = var.tenant
-    })
+    templatefile("${path.module}/values/argo_cd.tftpl", {})
   ]
 }
 

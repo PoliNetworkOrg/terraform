@@ -5,13 +5,7 @@ resource "azurerm_resource_group" "rg" {
 
 data "azurerm_client_config" "current" {}
 
-data "http" "myip" {
-  url = "https://ipv4.icanhazip.com/"
-}
-
 locals {
-  my_ip                = "${chomp(data.http.myip.response_body)}/32"
-  elia-ip              = "185.178.95.235/32"
   mariadb_internal_ip  = "mariadb-service.mariadb.svc.cluster.local"
   postgres_internal_ip = "postgres-service.postgres.svc.cluster.local"
 }
@@ -47,11 +41,7 @@ module "argo-cd" {
     module.aks
   ]
 
-  source       = "./modules/argocd/"
-  clientId     = data.azurerm_key_vault_secret.argocd_client_id.value
-  clientSecret = data.azurerm_key_vault_secret.argocd_client_secret.value
-  tenant       = data.azurerm_client_config.current.tenant_id
-
+  source = "./modules/argocd/"
   applications = [
     file("./argocd-applications.yaml")
   ]
