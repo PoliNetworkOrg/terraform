@@ -34,7 +34,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     name                        = "userpool"
     vm_size                     = "Standard_B2ms"
     os_disk_type                = "Managed"
-    os_disk_size_gb             = 30
+    os_disk_size_gb             = 128
     orchestrator_version        = var.kubernetes_orchestrator_version
     auto_scaling_enabled        = true
     max_count                   = 1
