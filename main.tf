@@ -57,15 +57,6 @@ module "argo-cd" {
   ]
 }
 
-module "aule_bot" {
-  depends_on = [
-    module.mariadb
-  ]
-
-  source        = "./modules/bots-migration/"
-  bot_namespace = "bot-rooms"
-}
-
 module "cloudflare" {
   depends_on = [
     module.aks
@@ -103,29 +94,6 @@ module "monitoring" {
   cluster_monitoring_telegram_token = data.azurerm_key_vault_secret.cluster_monitoring_telegram_token.value
 
   grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
-}
-
-module "bot_mod_prod" {
-  depends_on = [
-    module.mariadb
-  ]
-
-  source        = "./modules/bots-migration/"
-  bot_namespace = "bot-prod"
-}
-
-module "bot_mat_migration" {
-  depends_on = [
-    module.mariadb
-  ]
-
-  source = "./modules/bots-migration/"
-
-  bot_namespace               = "bot-mat"
-  persistent_storage          = true
-  persistent_storage_size_gi  = "250"
-  persistent_storage_location = azurerm_resource_group.rg.location
-  persistent_storage_rg_name  = azurerm_resource_group.rg.name
 }
 
 module "keyvault" {
