@@ -72,22 +72,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "systempool" {
   min_count             = each.value.min_count
 }
 
-resource "helm_release" "nginx_ingress" {
-  name             = "nginx-ingress"
-  repository       = "https://kubernetes.github.io/ingress-nginx"
-  chart            = "ingress-nginx"
-  namespace        = "ingress-nginx"
-  version          = "4.10.0"
-  create_namespace = true
-
-  values = [
-    templatefile("${path.module}/values/ingress.yaml.tftpl", {
-      resource_group = var.rg_name
-    })
-  ]
-}
-
-
 resource "kubernetes_cluster_role_binding" "adminorg" {
   metadata {
     name = "admin-global"

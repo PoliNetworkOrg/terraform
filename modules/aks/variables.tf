@@ -36,18 +36,3 @@ variable "kubernetes_orchestrator_version" {
   type        = string
   description = "Kubernetes version"
 }
-
-variable "cert_namespace" {
-  type    = string
-  default = "cert-manager"
-}
-
-# variable "repo_credentials" {
-#   type = list(object({
-#     key           = string,
-#     url           = string,
-#     sshPrivateKey = string,
-#     name          = string
-#   }))
-#   nullable = true
-# }
