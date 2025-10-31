@@ -41,7 +41,7 @@ resource "helm_release" "kubernetes-dashboard" {
 # the Cloudflare Rules section in our Cloudflare account.
 resource "kubernetes_service_account" "admin_user" {
   metadata {
-    name = "admin-user"
+    name      = "admin-user"
     namespace = var.namespace
   }
 }
