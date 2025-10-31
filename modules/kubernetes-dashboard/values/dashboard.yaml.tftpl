@@ -1,0 +1,47 @@
+# General app configuration
+app:
+  # Disable ingress since we're using Cloudflare tunnels
+  ingress:
+    enabled: false
+
+# Kong gateway configuration - this is the main service entry point
+# Kong acts as the gateway/router for all dashboard components (auth, api, web)
+kong:
+  enabled: true
+  proxy:
+    type: ClusterIP
+    # Enable HTTP mode since Cloudflare tunnel handles TLS termination
+    # The dashboard will be accessible via HTTP internally, Cloudflare encrypts externally
+    http:
+      enabled: true
+
+# Metrics scraper - reduce CPU request to avoid scheduling issues on small clusters
+metricsScraper:
+  containers:
+    resources:
+      requests:
+        cpu: 10m  # Reduced from default 100m to avoid scheduling issues
+        memory: 100Mi  # Reduced from default 200Mi
+      limits:
+        cpu: 250m  # Keep limit high to allow burst if needed
+        memory: 400Mi
+
+api:
+  containers:
+    resources:
+      requests:
+        cpu: 50m  # Reduced from default 100m
+        memory: 150Mi
+      limits:
+        cpu: 250m
+        memory: 400Mi
+
+web:
+  containers:
+    resources:
+      requests:
+        cpu: 50m  # Reduced from default 100m
+        memory: 150Mi
+      limits:
+        cpu: 250m
+        memory: 400Mi
