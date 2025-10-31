@@ -86,6 +86,17 @@ module "monitoring" {
   grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
 }
 
+module "kubernetes-dashboard" {
+  depends_on = [
+    module.aks
+  ]
+
+  source = "./modules/kubernetes-dashboard/"
+
+  // variables
+  namespace = "kubernetes-dashboard"
+}
+
 module "keyvault" {
   source = "./modules/keyvault/"
 
