@@ -71,20 +71,20 @@ module "app_dev" {
   db_user          = data.azurerm_key_vault_secret.dev_db_user.value
 }
 
-module "monitoring" {
-  depends_on = [
-    module.aks
-  ]
+# module "monitoring" {
+#   depends_on = [
+#     module.aks
+#   ]
 
-  source = "./modules/monitoring/"
+#   source = "./modules/monitoring/"
 
-  namespace = "monitoring"
+#   namespace = "monitoring"
 
-  cluster_monitoring_app_password   = data.azurerm_key_vault_secret.cluster_monitoring_app_password.value
-  cluster_monitoring_telegram_token = data.azurerm_key_vault_secret.cluster_monitoring_telegram_token.value
+#   cluster_monitoring_app_password   = data.azurerm_key_vault_secret.cluster_monitoring_app_password.value
+#   cluster_monitoring_telegram_token = data.azurerm_key_vault_secret.cluster_monitoring_telegram_token.value
 
-  grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
-}
+#   grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
+# }
 
 module "kubernetes-dashboard" {
   depends_on = [
