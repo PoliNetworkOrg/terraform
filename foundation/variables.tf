@@ -54,7 +54,10 @@ variable "budget_start_date" {
   default     = "2026-09-01T00:00:00Z"
 
   validation {
-    condition     = can(regex("^[0-9]{4}-[0-9]{2}-01T00:00:00Z$", var.budget_start_date))
+    condition = (
+      can(formatdate("YYYY-MM-DD", var.budget_start_date)) &&
+      can(regex("^[0-9]{4}-(0[1-9]|1[0-2])-01T00:00:00Z$", var.budget_start_date))
+    )
     error_message = "The Azure budget start date must be the first day of a month in UTC."
   }
 }
@@ -65,8 +68,8 @@ variable "monthly_budget_amount_usd" {
   default     = 140
 
   validation {
-    condition     = var.monthly_budget_amount_usd <= 166.67
-    error_message = "The budget must not exceed the USD 2,000/year sponsorship ceiling."
+    condition     = var.monthly_budget_amount_usd > 0 && var.monthly_budget_amount_usd <= (2000 / 12)
+    error_message = "The monthly budget must be positive and must not annualize above the USD 2,000 sponsorship ceiling."
   }
 }
 
@@ -76,8 +79,8 @@ variable "annual_budget_amount_usd" {
   default     = 1850
 
   validation {
-    condition     = var.annual_budget_amount_usd <= 1850
-    error_message = "The annual safety budget must retain at least USD 150 below the sponsorship ceiling."
+    condition     = var.annual_budget_amount_usd > 0 && var.annual_budget_amount_usd <= 1850
+    error_message = "The annual safety budget must be positive and retain at least USD 150 below the sponsorship ceiling."
   }
 }
 

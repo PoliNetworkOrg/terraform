@@ -26,6 +26,10 @@ group; it cannot delete or modify AKS.
 - Separate Cool ZRS storage account `polinetworkbackups` with a private
   `backups` container, blob versioning, 30-day soft deletion, 30-day unlocked
   immutable retention and 90-day lifecycle retention.
+- OS and data disks use Azure platform-managed encryption. Backup storage adds
+  infrastructure encryption, while backup archives will be encrypted by the
+  backup application. Customer-managed keys are intentionally excluded to
+  avoid making VM and backup recovery depend on Key Vault availability.
 - The storage firewall permits the `snet-services` service endpoint only;
   anonymous access and shared keys are disabled. A dedicated user-assigned
   identity `id-vm01-backup` receives `Storage Blob Data Contributor` only on
