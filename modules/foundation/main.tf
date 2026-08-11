@@ -86,7 +86,7 @@ resource "azurerm_linux_virtual_machine" "host" {
     prepare_data_disks_script = file("${path.module}/scripts/prepare-data-disks.sh")
   }))
   provision_vm_agent    = true
-  patch_assessment_mode = "AutomaticByPlatform"
+  patch_assessment_mode = "ImageDefault"
   patch_mode            = "ImageDefault"
   secure_boot_enabled   = true
   vtpm_enabled          = true
@@ -223,16 +223,6 @@ resource "azurerm_storage_container" "backup" {
   name                  = "backups"
   storage_account_id    = azurerm_storage_account.backup.id
   container_access_type = "private"
-
-  depends_on = [azurerm_role_assignment.terraform_backup_manager]
-}
-
-resource "azurerm_role_assignment" "terraform_backup_manager" {
-  name                 = uuidv5("url", "${azurerm_storage_account.backup.id}/Storage Blob Data Contributor/${var.terraform_principal_object_id}")
-  scope                = azurerm_storage_account.backup.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = var.terraform_principal_object_id
-  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_storage_container_immutability_policy" "backup" {
