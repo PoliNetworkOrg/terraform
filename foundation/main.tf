@@ -61,6 +61,7 @@ resource "azurerm_public_ip" "egress" {
   tags                = var.tags
 }
 
+#checkov:skip=CKV_AZURE_119:The static public IP provides explicit outbound connectivity only; the subnet NSG denies every inbound flow.
 resource "azurerm_network_interface" "host" {
   name                           = "nic-vm01"
   location                       = var.location
@@ -201,6 +202,11 @@ resource "azurerm_virtual_machine_extension" "prepare_data_disks" {
   ]
 }
 
+#checkov:skip=CKV_AZURE_206:ZRS was explicitly selected because zone redundancy meets the accepted threat model at lower cost than geo-replication.
+#checkov:skip=CKV_AZURE_59:The public endpoint is required by the cost-free service endpoint design, but the storage firewall admits only snet-services.
+#checkov:skip=CKV2_AZURE_33:A Microsoft.Storage service endpoint and default-deny storage firewall replace a billed private endpoint for this single VM.
+#checkov:skip=CKV_AZURE_36:Trusted-service bypass is deliberately disabled so only the approved subnet can cross the storage firewall.
+#checkov:skip=CKV_AZURE_33:This dedicated account uses Blob only and has no Queue workload to audit.
 resource "azurerm_storage_account" "backup" {
   name                              = var.backup_storage_account_name
   resource_group_name               = data.azurerm_resource_group.target.name
