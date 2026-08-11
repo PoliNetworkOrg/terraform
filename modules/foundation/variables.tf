@@ -29,6 +29,16 @@ variable "ssh_public_key" {
   }
 }
 
+variable "openbao_identity_id" {
+  description = "Resource ID of the dedicated user-assigned identity used for OpenBao auto-unseal."
+  type        = string
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[^/]+$", var.openbao_identity_id))
+    error_message = "OpenBao identity must be a user-assigned managed identity resource ID."
+  }
+}
+
 variable "vm_size" {
   description = "ARM64 VM SKU approved by the cost and capacity gates."
   type        = string

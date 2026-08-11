@@ -34,6 +34,10 @@ the infrastructure required for the Compose migration.
   anonymous access and shared keys are disabled. A dedicated user-assigned
   identity `id-vm01-backup` receives `Storage Blob Data Contributor` only on
   the backup container.
+- The VM also receives the dedicated user-assigned identity
+  `id-vm01-openbao`. It has only metadata and wrap/unwrap access to the
+  `openbao-unseal` key in the existing organization Key Vault, so OpenBao can
+  auto-unseal without a static Azure credential on disk.
 - The resource group has a USD 140 monthly operating budget with actual alerts
   at 85%, 100% and 120%, plus a forecast alert at 100%. A separate USD 1,850
   annual safety budget preserves USD 150 of sponsorship contingency; it alerts

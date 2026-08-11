@@ -111,7 +111,7 @@ resource "azurerm_linux_virtual_machine" "host" {
 
   identity {
     type         = "SystemAssigned, UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.backup.id]
+    identity_ids = [azurerm_user_assigned_identity.backup.id, var.openbao_identity_id]
   }
 
   os_disk {
