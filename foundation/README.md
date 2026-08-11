@@ -12,8 +12,11 @@ group; it cannot delete or modify AKS.
 - 32 GiB Standard SSD E4 OS disk named `disk-vm01-os`, 32 GiB Premium
   SSD P4 state disk named `disk-core`, and 64 GiB Standard SSD E6 services
   disk named `disk-services`. All three use ext4.
-- One Standard static public IP for explicit outbound connectivity. The NSG has
-  an explicit deny-all inbound rule and no host port is exposed.
+- VNet `vnet-main` (`10.42.0.0/16`) with private subnet `snet-services`
+  (`10.42.1.0/24`), and VM private address `10.42.1.4` on `nic-vm01`.
+- Standard static public IP `pip-vm01` provides explicit outbound connectivity
+  only. The subnet-level `nsg-services` has an explicit deny-all inbound rule;
+  no host port, including SSH, is exposed publicly.
 - Separate Cool LRS backup account, OAuth-only access, blob versioning, 14-day
   immutable retention and 90-day lifecycle retention.
 - VM system-assigned identity receives `Storage Blob Data Contributor` only on
@@ -21,12 +24,13 @@ group; it cannot delete or modify AKS.
 - Resource-group budget is USD 166/month, with actual alerts at 80% and 100%
   and a forecast alert at 100%.
 
-The public IP is not an administration endpoint. Bootstrap and recovery use
-Azure Run Command/Serial Console until the authenticated management path is in
-place. The SSH key is break-glass material; there is no SSH NSG rule. Its private
-key is stored as `compose-vm-ssh-private-key` in Azure Key Vault. Terraform reads
-only `compose-vm-ssh-public-key` from the same vault. The repository and its
-automation depend only on organization-owned Azure resources.
+The public IP is not an administration endpoint. Normal SSH access will traverse
+Cloudflare Zero Trust and the outbound-only Cloudflare Tunnel. Bootstrap and
+recovery use Azure Run Command/Serial Console until that authenticated path is
+available. The SSH key is break-glass material; there is no public SSH NSG rule.
+Its private key is stored as `compose-vm-ssh-private-key` in Azure Key Vault.
+Terraform reads only `compose-vm-ssh-public-key` from the same vault. The
+repository and its automation depend only on organization-owned Azure resources.
 
 ## State isolation
 

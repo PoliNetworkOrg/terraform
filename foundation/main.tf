@@ -17,7 +17,7 @@ locals {
 }
 
 resource "azurerm_virtual_network" "main" {
-  name                = "${local.prefix}-vnet"
+  name                = "vnet-main"
   location            = var.location
   resource_group_name = data.azurerm_resource_group.target.name
   address_space       = ["10.42.0.0/16"]
@@ -25,14 +25,15 @@ resource "azurerm_virtual_network" "main" {
 }
 
 resource "azurerm_subnet" "host" {
-  name                 = "host"
-  resource_group_name  = data.azurerm_resource_group.target.name
-  virtual_network_name = azurerm_virtual_network.main.name
-  address_prefixes     = ["10.42.1.0/24"]
+  name                            = "snet-services"
+  resource_group_name             = data.azurerm_resource_group.target.name
+  virtual_network_name            = azurerm_virtual_network.main.name
+  address_prefixes                = ["10.42.1.0/24"]
+  default_outbound_access_enabled = false
 }
 
 resource "azurerm_network_security_group" "host" {
-  name                = "${local.prefix}-nsg"
+  name                = "nsg-services"
   location            = var.location
   resource_group_name = data.azurerm_resource_group.target.name
   tags                = var.tags
@@ -51,7 +52,7 @@ resource "azurerm_network_security_group" "host" {
 }
 
 resource "azurerm_public_ip" "egress" {
-  name                = "${local.prefix}-pip"
+  name                = "pip-vm01"
   location            = var.location
   resource_group_name = data.azurerm_resource_group.target.name
   allocation_method   = "Static"
@@ -60,7 +61,7 @@ resource "azurerm_public_ip" "egress" {
 }
 
 resource "azurerm_network_interface" "host" {
-  name                           = "${local.prefix}-nic"
+  name                           = "nic-vm01"
   location                       = var.location
   resource_group_name            = data.azurerm_resource_group.target.name
   accelerated_networking_enabled = true
@@ -69,13 +70,14 @@ resource "azurerm_network_interface" "host" {
   ip_configuration {
     name                          = "primary"
     subnet_id                     = azurerm_subnet.host.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.42.1.4"
     public_ip_address_id          = azurerm_public_ip.egress.id
   }
 }
 
-resource "azurerm_network_interface_security_group_association" "host" {
-  network_interface_id      = azurerm_network_interface.host.id
+resource "azurerm_subnet_network_security_group_association" "host" {
+  subnet_id                 = azurerm_subnet.host.id
   network_security_group_id = azurerm_network_security_group.host.id
 }
 
@@ -121,7 +123,7 @@ resource "azurerm_linux_virtual_machine" "host" {
 
   boot_diagnostics {}
 
-  depends_on = [azurerm_network_interface_security_group_association.host]
+  depends_on = [azurerm_subnet_network_security_group_association.host]
 }
 
 resource "azurerm_managed_disk" "state" {
