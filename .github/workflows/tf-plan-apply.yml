@@ -80,8 +80,7 @@ jobs:
         
         delimiter="$(openssl rand -hex 8)"
         echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
-        echo "## Legacy AKS root Terraform plan" >> $GITHUB_OUTPUT
-        echo "This plan covers the existing root module, not the ARM64 foundation in \`foundation/\`." >> $GITHUB_OUTPUT
+        echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
         echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
         echo "" >> $GITHUB_OUTPUT
         echo '```terraform' >> $GITHUB_OUTPUT
