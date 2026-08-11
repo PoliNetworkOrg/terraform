@@ -60,13 +60,24 @@ variable "budget_start_date" {
 }
 
 variable "monthly_budget_amount_usd" {
-  description = "Absolute monthly ceiling corresponding to approximately USD 2,000/year."
+  description = "Monthly operating target used to detect abnormal spend early."
   type        = number
-  default     = 166
+  default     = 140
 
   validation {
     condition     = var.monthly_budget_amount_usd <= 166.67
     error_message = "The budget must not exceed the USD 2,000/year sponsorship ceiling."
+  }
+}
+
+variable "annual_budget_amount_usd" {
+  description = "Annual safety ceiling that preserves contingency below the USD 2,000 sponsorship."
+  type        = number
+  default     = 1850
+
+  validation {
+    condition     = var.annual_budget_amount_usd <= 1850
+    error_message = "The annual safety budget must retain at least USD 150 below the sponsorship ceiling."
   }
 }
 

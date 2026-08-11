@@ -30,8 +30,11 @@ group; it cannot delete or modify AKS.
   anonymous access and shared keys are disabled. A dedicated user-assigned
   identity `id-vm01-backup` receives `Storage Blob Data Contributor` only on
   the backup container.
-- Resource-group budget is USD 166/month, with actual alerts at 80% and 100%
-  and a forecast alert at 100%.
+- The resource group has a USD 140 monthly operating budget with actual alerts
+  at 85%, 100% and 120%, plus a forecast alert at 100%. A separate USD 1,850
+  annual safety budget preserves USD 150 of sponsorship contingency; it alerts
+  on an 80% forecast and actual spend at 75%, 85%, 95% and 100%. Budgets notify
+  `adminorg@polinetwork.org` and never stop resources automatically.
 
 The public IP is not an administration endpoint. Normal SSH access will traverse
 Cloudflare Zero Trust and the outbound-only Cloudflare Tunnel. Bootstrap and

@@ -285,7 +285,7 @@ resource "azurerm_role_assignment" "vm_backup_writer" {
 }
 
 resource "azurerm_consumption_budget_resource_group" "monthly" {
-  name              = "polinetwork-monthly-ceiling"
+  name              = "budget-rg-polinetwork-monthly"
   resource_group_id = data.azurerm_resource_group.target.id
   amount            = var.monthly_budget_amount_usd
   time_grain        = "Monthly"
@@ -296,7 +296,7 @@ resource "azurerm_consumption_budget_resource_group" "monthly" {
 
   notification {
     enabled        = true
-    threshold      = 80
+    threshold      = 85
     operator       = "GreaterThanOrEqualTo"
     threshold_type = "Actual"
     contact_emails = var.budget_contact_emails
@@ -307,6 +307,65 @@ resource "azurerm_consumption_budget_resource_group" "monthly" {
     threshold      = 100
     operator       = "GreaterThanOrEqualTo"
     threshold_type = "Forecasted"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 100
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 120
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+}
+
+resource "azurerm_consumption_budget_resource_group" "annual" {
+  name              = "budget-rg-polinetwork-annual-safety"
+  resource_group_id = data.azurerm_resource_group.target.id
+  amount            = var.annual_budget_amount_usd
+  time_grain        = "Annually"
+
+  time_period {
+    start_date = var.budget_start_date
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 80
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Forecasted"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 75
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 85
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 95
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
     contact_emails = var.budget_contact_emails
   }
 
