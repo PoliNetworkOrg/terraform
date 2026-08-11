@@ -30,6 +30,11 @@ variable "admin_username" {
   description = "Local break-glass administrator. The NSG exposes no SSH ingress."
   type        = string
   default     = "pnadmin"
+
+  validation {
+    condition     = var.admin_username == "pnadmin"
+    error_message = "The approved VM administrator username is pnadmin."
+  }
 }
 
 variable "backup_storage_account_name" {

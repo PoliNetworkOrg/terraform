@@ -17,6 +17,12 @@ group; it cannot delete or modify AKS.
 - Standard static public IP `pip-vm01` provides explicit outbound connectivity
   only. The subnet-level `nsg-services` has an explicit deny-all inbound rule;
   no host port, including SSH, is exposed publicly.
+- Debian uses a 4 GiB swap file with swappiness 10. SSH permits only the
+  `pnadmin` public key; root, password and keyboard-interactive login are
+  disabled. The Azure NSG is the host's network firewall, avoiding a second
+  ruleset that could conflict with Docker networking.
+- Azure performs daily patch assessment. Debian installs security updates with
+  `unattended-upgrades`, but automatic operating-system reboots are disabled.
 - Separate Cool ZRS storage account `polinetworkbackups` with a private
   `backups` container, blob versioning, 30-day soft deletion, 30-day unlocked
   immutable retention and 90-day lifecycle retention.

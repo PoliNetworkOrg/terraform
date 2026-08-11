@@ -105,7 +105,7 @@ resource "azurerm_linux_virtual_machine" "host" {
   }))
   provision_vm_agent    = true
   patch_assessment_mode = "AutomaticByPlatform"
-  patch_mode            = "AutomaticByPlatform"
+  patch_mode            = "ImageDefault"
   secure_boot_enabled   = true
   vtpm_enabled          = true
   tags                  = var.tags
