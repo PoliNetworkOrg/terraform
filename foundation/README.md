@@ -7,9 +7,11 @@ group; it cannot delete or modify AKS.
 ## Fixed decisions
 
 - `Standard_E2ps_v5` ARM64 VM in West Europe.
-- Ubuntu 22.04 ARM64 image version `22.04.202608060`.
-- 32 GiB Standard SSD OS disk, 32 GiB Premium P4 state disk and 32 GiB
-  Standard SSD E4 application disk.
+- Debian 13 ARM64 image version `0.20260810.2566`.
+- VM name `vm01`.
+- 32 GiB Standard SSD E4 OS disk named `disk-vm01-os`, 32 GiB Premium
+  SSD P4 state disk named `disk-core`, and 64 GiB Standard SSD E6 services
+  disk named `disk-services`. All three use ext4.
 - One Standard static public IP for explicit outbound connectivity. The NSG has
   an explicit deny-all inbound rule and no host port is exposed.
 - Separate Cool LRS backup account, OAuth-only access, blob versioning, 14-day

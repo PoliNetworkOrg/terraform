@@ -80,8 +80,8 @@ resource "azurerm_network_interface_security_group_association" "host" {
 }
 
 resource "azurerm_linux_virtual_machine" "host" {
-  name                            = "${local.prefix}-vm"
-  computer_name                   = "pn-compose-prod"
+  name                            = "vm01"
+  computer_name                   = "vm01"
   location                        = var.location
   resource_group_name             = data.azurerm_resource_group.target.name
   size                            = var.vm_size
@@ -106,17 +106,17 @@ resource "azurerm_linux_virtual_machine" "host" {
   }
 
   os_disk {
-    name                 = "${local.prefix}-os"
+    name                 = "disk-vm01-os"
     caching              = "ReadWrite"
     storage_account_type = "StandardSSD_LRS"
     disk_size_gb         = 32
   }
 
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts-arm64"
-    version   = "22.04.202608060"
+    publisher = "Debian"
+    offer     = "debian-13"
+    sku       = "13-arm64"
+    version   = "0.20260810.2566"
   }
 
   boot_diagnostics {}
@@ -125,7 +125,7 @@ resource "azurerm_linux_virtual_machine" "host" {
 }
 
 resource "azurerm_managed_disk" "state" {
-  name                          = "${local.prefix}-state-p4"
+  name                          = "disk-core"
   location                      = var.location
   resource_group_name           = data.azurerm_resource_group.target.name
   storage_account_type          = "Premium_LRS"
@@ -148,12 +148,12 @@ resource "azurerm_virtual_machine_data_disk_attachment" "state" {
 }
 
 resource "azurerm_managed_disk" "applications" {
-  name                          = "${local.prefix}-applications-e4"
+  name                          = "disk-services"
   location                      = var.location
   resource_group_name           = data.azurerm_resource_group.target.name
   storage_account_type          = "StandardSSD_LRS"
   create_option                 = "Empty"
-  disk_size_gb                  = 32
+  disk_size_gb                  = 64
   network_access_policy         = "DenyAll"
   public_network_access_enabled = false
   tags                          = merge(var.tags, { DataClass = "applications" })
