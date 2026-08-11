@@ -61,8 +61,8 @@ resource "azurerm_public_ip" "egress" {
   tags                = var.tags
 }
 
-#checkov:skip=CKV_AZURE_119:The static public IP provides explicit outbound connectivity only; the subnet NSG denies every inbound flow.
 resource "azurerm_network_interface" "host" {
+  #checkov:skip=CKV_AZURE_119:The static public IP provides explicit outbound connectivity only; the subnet NSG denies every inbound flow.
   name                           = "nic-vm01"
   location                       = var.location
   resource_group_name            = data.azurerm_resource_group.target.name
@@ -91,6 +91,7 @@ resource "azurerm_user_assigned_identity" "backup" {
 }
 
 resource "azurerm_linux_virtual_machine" "host" {
+  #checkov:skip=CKV_AZURE_50:Azure Run Command recovery requires extension operations, but no persistent VM extension is declared.
   name                            = "vm01"
   computer_name                   = "vm01"
   location                        = var.location
@@ -138,8 +139,8 @@ resource "azurerm_linux_virtual_machine" "host" {
   depends_on = [azurerm_subnet_network_security_group_association.host]
 }
 
-#checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
 resource "azurerm_managed_disk" "state" {
+  #checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
   name                          = "disk-core"
   location                      = var.location
   resource_group_name           = data.azurerm_resource_group.target.name
@@ -162,8 +163,8 @@ resource "azurerm_virtual_machine_data_disk_attachment" "state" {
   caching            = "None"
 }
 
-#checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
 resource "azurerm_managed_disk" "applications" {
+  #checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
   name                          = "disk-services"
   location                      = var.location
   resource_group_name           = data.azurerm_resource_group.target.name
@@ -186,13 +187,13 @@ resource "azurerm_virtual_machine_data_disk_attachment" "applications" {
   caching            = "ReadWrite"
 }
 
-#checkov:skip=CKV_AZURE_206:ZRS was explicitly selected because zone redundancy meets the accepted threat model at lower cost than geo-replication.
-#checkov:skip=CKV_AZURE_59:The public endpoint is required by the cost-free service endpoint design, but the storage firewall admits only snet-services.
-#checkov:skip=CKV2_AZURE_33:A Microsoft.Storage service endpoint and default-deny storage firewall replace a billed private endpoint for this single VM.
-#checkov:skip=CKV_AZURE_36:Trusted-service bypass is deliberately disabled so only the approved subnet can cross the storage firewall.
-#checkov:skip=CKV_AZURE_33:This dedicated account uses Blob only and has no Queue workload to audit.
-#checkov:skip=CKV2_AZURE_1:Platform-managed keys plus infrastructure encryption and encrypted backup archives avoid a Key Vault recovery dependency.
 resource "azurerm_storage_account" "backup" {
+  #checkov:skip=CKV_AZURE_206:ZRS was explicitly selected because zone redundancy meets the accepted threat model at lower cost than geo-replication.
+  #checkov:skip=CKV_AZURE_59:The public endpoint is required by the cost-free service endpoint design, but the storage firewall admits only snet-services.
+  #checkov:skip=CKV2_AZURE_33:A Microsoft.Storage service endpoint and default-deny storage firewall replace a billed private endpoint for this single VM.
+  #checkov:skip=CKV_AZURE_36:Trusted-service bypass is deliberately disabled so only the approved subnet can cross the storage firewall.
+  #checkov:skip=CKV_AZURE_33:This dedicated account uses Blob only and has no Queue workload to audit.
+  #checkov:skip=CKV2_AZURE_1:Platform-managed keys plus infrastructure encryption and encrypted backup archives avoid a Key Vault recovery dependency.
   name                              = var.backup_storage_account_name
   resource_group_name               = data.azurerm_resource_group.target.name
   location                          = var.location
@@ -235,8 +236,8 @@ resource "azurerm_storage_account" "backup" {
   }
 }
 
-#checkov:skip=CKV2_AZURE_21:Initial backup observability uses job-age and success alerts; per-read Log Analytics ingestion is deferred until usage is measured.
 resource "azurerm_storage_container" "backup" {
+  #checkov:skip=CKV2_AZURE_21:Initial backup observability uses job-age and success alerts; per-read Log Analytics ingestion is deferred until usage is measured.
   name                  = "backups"
   storage_account_id    = azurerm_storage_account.backup.id
   container_access_type = "private"
