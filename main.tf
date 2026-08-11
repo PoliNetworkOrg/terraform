@@ -71,21 +71,6 @@ module "app_dev" {
   db_user          = data.azurerm_key_vault_secret.dev_db_user.value
 }
 
-# module "monitoring" {
-#   depends_on = [
-#     module.aks
-#   ]
-
-#   source = "./modules/monitoring/"
-
-#   namespace = "monitoring"
-
-#   cluster_monitoring_app_password   = data.azurerm_key_vault_secret.cluster_monitoring_app_password.value
-#   cluster_monitoring_telegram_token = data.azurerm_key_vault_secret.cluster_monitoring_telegram_token.value
-
-#   grafana_admin_password = data.azurerm_key_vault_secret.grafana_admin_password.value
-# }
-
 module "kubernetes-dashboard" {
   depends_on = [
     module.aks
@@ -116,6 +101,15 @@ module "storageaccount" {
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
+}
+
+module "foundation" {
+  source = "./modules/foundation"
+
+  location       = azurerm_resource_group.rg.location
+  rg_id          = azurerm_resource_group.rg.id
+  rg_name        = azurerm_resource_group.rg.name
+  ssh_public_key = data.azurerm_key_vault_secret.compose_vm_ssh_public_key.value
 }
 
 module "mariadb" {

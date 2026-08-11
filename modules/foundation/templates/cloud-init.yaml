@@ -1,0 +1,83 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+ssh_pwauth: false
+
+packages:
+  - unattended-upgrades
+
+bootcmd:
+  - mkdir -p /srv/polinetwork/state /srv/polinetwork/applications /srv/polinetwork/compose
+
+swap:
+  filename: /swapfile
+  size: 4294967296
+  maxsize: 4294967296
+
+write_files:
+  - path: /etc/ssh/sshd_config.d/10-polinetwork-hardening.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+      AllowUsers pnadmin
+  - path: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root:root
+    permissions: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+  - path: /etc/apt/apt.conf.d/52polinetwork-unattended-upgrades
+    owner: root:root
+    permissions: "0644"
+    content: |
+      Unattended-Upgrade::Origins-Pattern {
+        "origin=Debian,codename=$${distro_codename}-security,label=Debian-Security";
+      };
+      Unattended-Upgrade::Automatic-Reboot "false";
+  - path: /usr/local/sbin/prepare-data-disks
+    owner: root:root
+    permissions: "0750"
+    content: |
+      ${indent(6, prepare_data_disks_script)}
+  - path: /etc/systemd/system/prepare-data-disks.service
+    owner: root:root
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Prepare and mount PoliNetwork data disks
+      After=cloud-init-local.service
+      Before=docker.service
+      StartLimitIntervalSec=0
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/prepare-data-disks
+      RemainAfterExit=yes
+      TimeoutStartSec=6min
+      Restart=on-failure
+      RestartSec=30s
+
+      [Install]
+      WantedBy=multi-user.target
+  - path: /etc/sysctl.d/60-polinetwork-container-host.conf
+    permissions: "0644"
+    content: |
+      vm.swappiness=10
+      vm.overcommit_memory=1
+      fs.inotify.max_user_watches=524288
+
+runcmd:
+  - [sysctl, --system]
+  - [/usr/sbin/sshd, -t]
+  - [systemctl, reload, ssh.service]
+  - [systemctl, enable, --now, unattended-upgrades.service]
+  - [systemctl, daemon-reload]
+  - [systemctl, enable, prepare-data-disks.service]
+  - [systemctl, start, --no-block, prepare-data-disks.service]
+  - [chown, -R, root:root, /srv/polinetwork]
+
+final_message: "PoliNetwork foundation bootstrap completed"

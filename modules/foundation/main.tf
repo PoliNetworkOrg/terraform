@@ -1,0 +1,361 @@
+resource "azurerm_virtual_network" "main" {
+  name                = "vnet-main"
+  location            = var.location
+  resource_group_name = var.rg_name
+  address_space       = ["10.42.0.0/16"]
+  tags                = var.tags
+}
+
+resource "azurerm_subnet" "host" {
+  name                            = "snet-services"
+  resource_group_name             = var.rg_name
+  virtual_network_name            = azurerm_virtual_network.main.name
+  address_prefixes                = ["10.42.1.0/24"]
+  default_outbound_access_enabled = false
+  service_endpoints               = ["Microsoft.Storage"]
+}
+
+resource "azurerm_network_security_group" "host" {
+  name                = "nsg-services"
+  location            = var.location
+  resource_group_name = var.rg_name
+  tags                = var.tags
+
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_public_ip" "egress" {
+  name                = "pip-vm01"
+  location            = var.location
+  resource_group_name = var.rg_name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  tags                = var.tags
+}
+
+resource "azurerm_network_interface" "host" {
+  #checkov:skip=CKV_AZURE_119:The static public IP provides explicit outbound connectivity only; the subnet NSG denies every inbound flow.
+  name                           = "nic-vm01"
+  location                       = var.location
+  resource_group_name            = var.rg_name
+  accelerated_networking_enabled = true
+  tags                           = var.tags
+
+  ip_configuration {
+    name                          = "primary"
+    subnet_id                     = azurerm_subnet.host.id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.42.1.4"
+    public_ip_address_id          = azurerm_public_ip.egress.id
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "host" {
+  subnet_id                 = azurerm_subnet.host.id
+  network_security_group_id = azurerm_network_security_group.host.id
+}
+
+resource "azurerm_user_assigned_identity" "backup" {
+  name                = "id-vm01-backup"
+  location            = var.location
+  resource_group_name = var.rg_name
+  tags                = merge(var.tags, { Purpose = "backup" })
+}
+
+resource "azurerm_linux_virtual_machine" "host" {
+  #checkov:skip=CKV_AZURE_50:Azure Run Command recovery requires extension operations, but no persistent VM extension is declared.
+  name                            = "vm01"
+  computer_name                   = "vm01"
+  location                        = var.location
+  resource_group_name             = var.rg_name
+  size                            = var.vm_size
+  admin_username                  = var.admin_username
+  disable_password_authentication = true
+  network_interface_ids           = [azurerm_network_interface.host.id]
+  custom_data = base64encode(templatefile("${path.module}/templates/cloud-init.yaml", {
+    prepare_data_disks_script = file("${path.module}/scripts/prepare-data-disks.sh")
+  }))
+  provision_vm_agent    = true
+  patch_assessment_mode = "AutomaticByPlatform"
+  patch_mode            = "ImageDefault"
+  secure_boot_enabled   = true
+  vtpm_enabled          = true
+  tags                  = var.tags
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = trimspace(var.ssh_public_key)
+  }
+
+  identity {
+    type         = "SystemAssigned, UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.backup.id]
+  }
+
+  os_disk {
+    name                 = "disk-vm01-os"
+    caching              = "ReadWrite"
+    storage_account_type = "StandardSSD_LRS"
+    disk_size_gb         = 32
+  }
+
+  source_image_reference {
+    publisher = "Debian"
+    offer     = "debian-13"
+    sku       = "13-arm64"
+    version   = "0.20260810.2566"
+  }
+
+  boot_diagnostics {}
+
+  depends_on = [azurerm_subnet_network_security_group_association.host]
+}
+
+resource "azurerm_managed_disk" "state" {
+  #checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
+  name                          = "disk-core"
+  location                      = var.location
+  resource_group_name           = var.rg_name
+  storage_account_type          = "Premium_LRS"
+  create_option                 = "Empty"
+  disk_size_gb                  = 32
+  network_access_policy         = "DenyAll"
+  public_network_access_enabled = false
+  tags                          = merge(var.tags, { DataClass = "state" })
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "state" {
+  managed_disk_id    = azurerm_managed_disk.state.id
+  virtual_machine_id = azurerm_linux_virtual_machine.host.id
+  lun                = 0
+  caching            = "None"
+}
+
+resource "azurerm_managed_disk" "applications" {
+  #checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
+  name                          = "disk-services"
+  location                      = var.location
+  resource_group_name           = var.rg_name
+  storage_account_type          = "StandardSSD_LRS"
+  create_option                 = "Empty"
+  disk_size_gb                  = 64
+  network_access_policy         = "DenyAll"
+  public_network_access_enabled = false
+  tags                          = merge(var.tags, { DataClass = "applications" })
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "applications" {
+  managed_disk_id    = azurerm_managed_disk.applications.id
+  virtual_machine_id = azurerm_linux_virtual_machine.host.id
+  lun                = 1
+  caching            = "ReadWrite"
+}
+
+resource "azurerm_storage_account" "backup" {
+  #checkov:skip=CKV_AZURE_206:ZRS was explicitly selected because zone redundancy meets the accepted threat model at lower cost than geo-replication.
+  #checkov:skip=CKV_AZURE_59:The public endpoint is required by the cost-free service endpoint design, but the storage firewall admits only snet-services.
+  #checkov:skip=CKV2_AZURE_33:A Microsoft.Storage service endpoint and default-deny storage firewall replace a billed private endpoint for this single VM.
+  #checkov:skip=CKV_AZURE_36:Trusted-service bypass is deliberately disabled so only the approved subnet can cross the storage firewall.
+  #checkov:skip=CKV_AZURE_33:This dedicated account uses Blob only and has no Queue workload to audit.
+  #checkov:skip=CKV2_AZURE_1:Platform-managed keys plus infrastructure encryption and encrypted backup archives avoid a Key Vault recovery dependency.
+  name                              = var.backup_storage_account_name
+  resource_group_name               = var.rg_name
+  location                          = var.location
+  account_tier                      = "Standard"
+  account_replication_type          = "ZRS"
+  account_kind                      = "StorageV2"
+  access_tier                       = "Cool"
+  min_tls_version                   = "TLS1_2"
+  https_traffic_only_enabled        = true
+  public_network_access_enabled     = true
+  shared_access_key_enabled         = false
+  default_to_oauth_authentication   = true
+  allow_nested_items_to_be_public   = false
+  cross_tenant_replication_enabled  = false
+  infrastructure_encryption_enabled = true
+  local_user_enabled                = false
+  tags                              = merge(var.tags, { DataClass = "backup" })
+
+  network_rules {
+    default_action             = "Deny"
+    bypass                     = ["None"]
+    virtual_network_subnet_ids = [azurerm_subnet.host.id]
+  }
+
+  blob_properties {
+    versioning_enabled  = true
+    change_feed_enabled = true
+
+    delete_retention_policy {
+      days = 30
+    }
+
+    container_delete_retention_policy {
+      days = 30
+    }
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "azurerm_storage_container" "backup" {
+  #checkov:skip=CKV2_AZURE_21:Initial backup observability uses job-age and success alerts; per-read Log Analytics ingestion is deferred until usage is measured.
+  name                  = "backups"
+  storage_account_id    = azurerm_storage_account.backup.id
+  container_access_type = "private"
+}
+
+resource "azurerm_storage_container_immutability_policy" "backup" {
+  storage_container_resource_manager_id = azurerm_storage_container.backup.id
+  immutability_period_in_days           = 30
+  protected_append_writes_enabled       = true
+}
+
+resource "azurerm_storage_management_policy" "backup" {
+  storage_account_id = azurerm_storage_account.backup.id
+
+  rule {
+    name    = "backup-retention"
+    enabled = true
+
+    filters {
+      prefix_match = ["backups/"]
+      blob_types   = ["blockBlob", "appendBlob"]
+    }
+
+    actions {
+      base_blob {
+        delete_after_days_since_modification_greater_than = 90
+      }
+
+      snapshot {
+        delete_after_days_since_creation_greater_than = 90
+      }
+
+      version {
+        delete_after_days_since_creation = 90
+      }
+    }
+  }
+}
+
+resource "azurerm_role_assignment" "vm_backup_writer" {
+  scope                = azurerm_storage_container.backup.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.backup.principal_id
+  principal_type       = "ServicePrincipal"
+}
+
+resource "azurerm_consumption_budget_resource_group" "monthly" {
+  name              = "budget-rg-polinetwork-monthly"
+  resource_group_id = var.rg_id
+  amount            = var.monthly_budget_amount_usd
+  time_grain        = "Monthly"
+
+  time_period {
+    start_date = var.budget_start_date
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 85
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 100
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Forecasted"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 100
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 120
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+}
+
+resource "azurerm_consumption_budget_resource_group" "annual" {
+  name              = "budget-rg-polinetwork-annual-safety"
+  resource_group_id = var.rg_id
+  amount            = var.annual_budget_amount_usd
+  time_grain        = "Annually"
+
+  time_period {
+    start_date = var.budget_start_date
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 80
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Forecasted"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 75
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 85
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 95
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 100
+    operator       = "GreaterThanOrEqualTo"
+    threshold_type = "Actual"
+    contact_emails = var.budget_contact_emails
+  }
+}
