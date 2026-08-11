@@ -29,13 +29,23 @@ variable "ssh_public_key" {
   }
 }
 
+variable "terraform_principal_object_id" {
+  description = "Object ID of the organization CI service principal that manages the OAuth-only backup account."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.terraform_principal_object_id))
+    error_message = "The Terraform principal object ID must be a UUID."
+  }
+}
+
 variable "vm_size" {
   description = "ARM64 VM SKU approved by the cost and capacity gates."
   type        = string
-  default     = "Standard_E2ps_v5"
+  default     = "Standard_E2ps_v6"
 
   validation {
-    condition     = var.vm_size == "Standard_E2ps_v5"
+    condition     = var.vm_size == "Standard_E2ps_v6"
     error_message = "Automatic fallback to a larger or x86 SKU is forbidden."
   }
 }

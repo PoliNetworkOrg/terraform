@@ -110,6 +110,8 @@ module "foundation" {
   rg_id          = azurerm_resource_group.rg.id
   rg_name        = azurerm_resource_group.rg.name
   ssh_public_key = data.azurerm_key_vault_secret.compose_vm_ssh_public_key.value
+
+  terraform_principal_object_id = "81dd9fd1-ea71-420a-9f8a-8cbb74f479a6"
 }
 
 module "mariadb" {
