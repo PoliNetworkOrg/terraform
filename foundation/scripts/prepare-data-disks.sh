@@ -6,7 +6,7 @@ prepare_disk() {
   local label="$2"
   local mount_point="$3"
 
-  for _ in {1..60}; do
+  for _ in {1..150}; do
     [[ -b "$device" ]] && break
     sleep 2
   done

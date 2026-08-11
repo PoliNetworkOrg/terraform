@@ -12,6 +12,31 @@ swap:
   maxsize: 2147483648
 
 write_files:
+  - path: /usr/local/sbin/prepare-data-disks
+    owner: root:root
+    permissions: "0750"
+    content: |
+      ${indent(6, prepare_data_disks_script)}
+  - path: /etc/systemd/system/prepare-data-disks.service
+    owner: root:root
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Prepare and mount PoliNetwork data disks
+      After=cloud-init-local.service
+      Before=docker.service
+      StartLimitIntervalSec=0
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/prepare-data-disks
+      RemainAfterExit=yes
+      TimeoutStartSec=6min
+      Restart=on-failure
+      RestartSec=30s
+
+      [Install]
+      WantedBy=multi-user.target
   - path: /etc/sysctl.d/60-polinetwork-container-host.conf
     permissions: "0644"
     content: |
@@ -21,6 +46,9 @@ write_files:
 
 runcmd:
   - [sysctl, --system]
+  - [systemctl, daemon-reload]
+  - [systemctl, enable, prepare-data-disks.service]
+  - [systemctl, start, --no-block, prepare-data-disks.service]
   - [chown, -R, root:root, /srv/polinetwork]
 
 final_message: "PoliNetwork foundation bootstrap completed"

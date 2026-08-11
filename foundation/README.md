@@ -58,9 +58,9 @@ the Azure price check remains within the migration budget, and the operator has
 confirmed the exact SSH public key. `terraform.tfvars` and plan files must remain
 untracked.
 
-Cloud-init applies the host-level kernel settings. A Custom Script extension
-runs only after both data disks are attached; it formats disks only when no
-filesystem exists, verifies existing filesystems before mounting, and therefore
-does not overwrite a restored disk. Docker, Komodo, OpenBao, Traefik,
-cloudflared and observability belong to the separately versioned platform stage;
-no bootstrap secret is stored in Terraform state.
+Cloud-init applies the host-level kernel settings and installs an idempotent
+systemd oneshot service that waits for both data disks. The service formats a
+disk only when no filesystem exists, verifies existing filesystems before
+mounting, and therefore does not overwrite a restored disk. Docker, Komodo,
+OpenBao, Traefik, cloudflared and observability belong to the separately
+versioned platform stage; no bootstrap secret is stored in Terraform state.

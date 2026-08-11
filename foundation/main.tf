@@ -99,13 +99,15 @@ resource "azurerm_linux_virtual_machine" "host" {
   admin_username                  = var.admin_username
   disable_password_authentication = true
   network_interface_ids           = [azurerm_network_interface.host.id]
-  custom_data                     = base64encode(file("${path.module}/templates/cloud-init.yaml"))
-  provision_vm_agent              = true
-  patch_assessment_mode           = "AutomaticByPlatform"
-  patch_mode                      = "AutomaticByPlatform"
-  secure_boot_enabled             = true
-  vtpm_enabled                    = true
-  tags                            = var.tags
+  custom_data = base64encode(templatefile("${path.module}/templates/cloud-init.yaml", {
+    prepare_data_disks_script = file("${path.module}/scripts/prepare-data-disks.sh")
+  }))
+  provision_vm_agent    = true
+  patch_assessment_mode = "AutomaticByPlatform"
+  patch_mode            = "AutomaticByPlatform"
+  secure_boot_enabled   = true
+  vtpm_enabled          = true
+  tags                  = var.tags
 
   admin_ssh_key {
     username   = var.admin_username
@@ -136,6 +138,7 @@ resource "azurerm_linux_virtual_machine" "host" {
   depends_on = [azurerm_subnet_network_security_group_association.host]
 }
 
+#checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
 resource "azurerm_managed_disk" "state" {
   name                          = "disk-core"
   location                      = var.location
@@ -159,6 +162,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "state" {
   caching            = "None"
 }
 
+#checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
 resource "azurerm_managed_disk" "applications" {
   name                          = "disk-services"
   location                      = var.location
@@ -182,31 +186,12 @@ resource "azurerm_virtual_machine_data_disk_attachment" "applications" {
   caching            = "ReadWrite"
 }
 
-resource "azurerm_virtual_machine_extension" "prepare_data_disks" {
-  name                       = "prepare-data-disks"
-  virtual_machine_id         = azurerm_linux_virtual_machine.host.id
-  publisher                  = "Microsoft.Azure.Extensions"
-  type                       = "CustomScript"
-  type_handler_version       = "2.1"
-  auto_upgrade_minor_version = true
-  automatic_upgrade_enabled  = true
-  tags                       = var.tags
-
-  settings = jsonencode({
-    commandToExecute = "echo '${base64encode(file("${path.module}/scripts/prepare-data-disks.sh"))}' | base64 -d | bash"
-  })
-
-  depends_on = [
-    azurerm_virtual_machine_data_disk_attachment.state,
-    azurerm_virtual_machine_data_disk_attachment.applications,
-  ]
-}
-
 #checkov:skip=CKV_AZURE_206:ZRS was explicitly selected because zone redundancy meets the accepted threat model at lower cost than geo-replication.
 #checkov:skip=CKV_AZURE_59:The public endpoint is required by the cost-free service endpoint design, but the storage firewall admits only snet-services.
 #checkov:skip=CKV2_AZURE_33:A Microsoft.Storage service endpoint and default-deny storage firewall replace a billed private endpoint for this single VM.
 #checkov:skip=CKV_AZURE_36:Trusted-service bypass is deliberately disabled so only the approved subnet can cross the storage firewall.
 #checkov:skip=CKV_AZURE_33:This dedicated account uses Blob only and has no Queue workload to audit.
+#checkov:skip=CKV2_AZURE_1:Platform-managed keys plus infrastructure encryption and encrypted backup archives avoid a Key Vault recovery dependency.
 resource "azurerm_storage_account" "backup" {
   name                              = var.backup_storage_account_name
   resource_group_name               = data.azurerm_resource_group.target.name
@@ -250,6 +235,7 @@ resource "azurerm_storage_account" "backup" {
   }
 }
 
+#checkov:skip=CKV2_AZURE_21:Initial backup observability uses job-age and success alerts; per-read Log Analytics ingestion is deferred until usage is measured.
 resource "azurerm_storage_container" "backup" {
   name                  = "backups"
   storage_account_id    = azurerm_storage_account.backup.id
