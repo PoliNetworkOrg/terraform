@@ -1,0 +1,6 @@
+# Must be the first day of the current or a future month when first applied.
+budget_start_date = "2026-09-01T00:00:00Z"
+
+budget_contact_emails = [
+  "adminorg@polinetwork.org",
+]

@@ -1,0 +1,26 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+ssh_pwauth: false
+
+bootcmd:
+  - mkdir -p /srv/polinetwork/state /srv/polinetwork/applications /srv/polinetwork/compose
+
+swap:
+  filename: /swapfile
+  size: 2147483648
+  maxsize: 2147483648
+
+write_files:
+  - path: /etc/sysctl.d/60-polinetwork-container-host.conf
+    permissions: "0644"
+    content: |
+      vm.swappiness=10
+      vm.overcommit_memory=1
+      fs.inotify.max_user_watches=524288
+
+runcmd:
+  - [sysctl, --system]
+  - [chown, -R, root:root, /srv/polinetwork]
+
+final_message: "PoliNetwork foundation bootstrap completed"
