@@ -6,7 +6,7 @@ the infrastructure required for the Compose migration.
 
 ## Fixed decisions
 
-- `Standard_E2ps_v5` ARM64 VM in West Europe.
+- `Standard_E2ps_v6` ARM64 VM in West Europe with Trusted Launch.
 - Debian 13 ARM64 image version `0.20260810.2566`.
 - VM name `vm01`.
 - 32 GiB Standard SSD E4 OS disk named `disk-vm01-os`, 32 GiB Premium
