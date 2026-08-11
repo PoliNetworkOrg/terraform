@@ -4,8 +4,18 @@ output "vm_id" {
 }
 
 output "vm_principal_id" {
-  description = "Managed identity used by backup jobs."
+  description = "System-assigned identity of the Compose host."
   value       = azurerm_linux_virtual_machine.host.identity[0].principal_id
+}
+
+output "backup_identity_client_id" {
+  description = "Client ID selected by backup jobs when requesting managed-identity tokens."
+  value       = azurerm_user_assigned_identity.backup.client_id
+}
+
+output "backup_identity_principal_id" {
+  description = "Principal ID with write access to the backup container."
+  value       = azurerm_user_assigned_identity.backup.principal_id
 }
 
 output "private_ip_address" {

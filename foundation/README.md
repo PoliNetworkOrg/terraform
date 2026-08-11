@@ -17,9 +17,12 @@ group; it cannot delete or modify AKS.
 - Standard static public IP `pip-vm01` provides explicit outbound connectivity
   only. The subnet-level `nsg-services` has an explicit deny-all inbound rule;
   no host port, including SSH, is exposed publicly.
-- Separate Cool LRS backup account, OAuth-only access, blob versioning, 14-day
+- Separate Cool ZRS storage account `polinetworkbackups` with a private
+  `backups` container, blob versioning, 30-day soft deletion, 30-day unlocked
   immutable retention and 90-day lifecycle retention.
-- VM system-assigned identity receives `Storage Blob Data Contributor` only on
+- The storage firewall permits the `snet-services` service endpoint only;
+  anonymous access and shared keys are disabled. A dedicated user-assigned
+  identity `id-vm01-backup` receives `Storage Blob Data Contributor` only on
   the backup container.
 - Resource-group budget is USD 166/month, with actual alerts at 80% and 100%
   and a forecast alert at 100%.

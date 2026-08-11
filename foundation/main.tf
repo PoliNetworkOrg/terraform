@@ -30,6 +30,7 @@ resource "azurerm_subnet" "host" {
   virtual_network_name            = azurerm_virtual_network.main.name
   address_prefixes                = ["10.42.1.0/24"]
   default_outbound_access_enabled = false
+  service_endpoints               = ["Microsoft.Storage"]
 }
 
 resource "azurerm_network_security_group" "host" {
@@ -81,6 +82,13 @@ resource "azurerm_subnet_network_security_group_association" "host" {
   network_security_group_id = azurerm_network_security_group.host.id
 }
 
+resource "azurerm_user_assigned_identity" "backup" {
+  name                = "id-vm01-backup"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.target.name
+  tags                = merge(var.tags, { Purpose = "backup" })
+}
+
 resource "azurerm_linux_virtual_machine" "host" {
   name                            = "vm01"
   computer_name                   = "vm01"
@@ -104,7 +112,8 @@ resource "azurerm_linux_virtual_machine" "host" {
   }
 
   identity {
-    type = "SystemAssigned"
+    type         = "SystemAssigned, UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.backup.id]
   }
 
   os_disk {
@@ -197,7 +206,7 @@ resource "azurerm_storage_account" "backup" {
   resource_group_name               = data.azurerm_resource_group.target.name
   location                          = var.location
   account_tier                      = "Standard"
-  account_replication_type          = "LRS"
+  account_replication_type          = "ZRS"
   account_kind                      = "StorageV2"
   access_tier                       = "Cool"
   min_tls_version                   = "TLS1_2"
@@ -212,9 +221,9 @@ resource "azurerm_storage_account" "backup" {
   tags                              = merge(var.tags, { DataClass = "backup" })
 
   network_rules {
-    default_action = "Deny"
-    bypass         = ["AzureServices"]
-    ip_rules       = [azurerm_public_ip.egress.ip_address]
+    default_action             = "Deny"
+    bypass                     = ["None"]
+    virtual_network_subnet_ids = [azurerm_subnet.host.id]
   }
 
   blob_properties {
@@ -236,14 +245,14 @@ resource "azurerm_storage_account" "backup" {
 }
 
 resource "azurerm_storage_container" "backup" {
-  name                  = "backup"
+  name                  = "backups"
   storage_account_id    = azurerm_storage_account.backup.id
   container_access_type = "private"
 }
 
 resource "azurerm_storage_container_immutability_policy" "backup" {
   storage_container_resource_manager_id = azurerm_storage_container.backup.id
-  immutability_period_in_days           = 14
+  immutability_period_in_days           = 30
   protected_append_writes_enabled       = true
 }
 
@@ -255,7 +264,7 @@ resource "azurerm_storage_management_policy" "backup" {
     enabled = true
 
     filters {
-      prefix_match = ["backup/"]
+      prefix_match = ["backups/"]
       blob_types   = ["blockBlob", "appendBlob"]
     }
 
@@ -278,7 +287,8 @@ resource "azurerm_storage_management_policy" "backup" {
 resource "azurerm_role_assignment" "vm_backup_writer" {
   scope                = azurerm_storage_container.backup.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_linux_virtual_machine.host.identity[0].principal_id
+  principal_id         = azurerm_user_assigned_identity.backup.principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_consumption_budget_resource_group" "monthly" {

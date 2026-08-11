@@ -35,7 +35,7 @@ variable "admin_username" {
 variable "backup_storage_account_name" {
   description = "Globally unique storage account dedicated to off-host backups."
   type        = string
-  default     = "polinetworkbackup"
+  default     = "polinetworkbackups"
 
   validation {
     condition     = can(regex("^[a-z0-9]{3,24}$", var.backup_storage_account_name))
