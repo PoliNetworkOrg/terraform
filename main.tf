@@ -42,8 +42,9 @@ module "aks" {
     }
   ]
 
-  rg_location = azurerm_resource_group.rg.location
-  rg_name     = azurerm_resource_group.rg.name
+  rg_location     = azurerm_resource_group.rg.location
+  rg_name         = azurerm_resource_group.rg.name
+  subscription_id = data.azurerm_client_config.current.subscription_id
 
   kubernetes_orchestrator_version = "1.29.13"
 

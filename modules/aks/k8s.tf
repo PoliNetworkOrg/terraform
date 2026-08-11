@@ -1,4 +1,5 @@
-data "azurerm_subscription" "primary" {
+locals {
+  subscription_scope = "/subscriptions/${var.subscription_id}"
 }
 
 # tfsec:ignore:azure-container-limit-authorized-ips
@@ -95,7 +96,7 @@ resource "kubernetes_cluster_role_binding" "adminorg" {
 
 resource "azurerm_role_definition" "aks_reader" {
   name        = "aks_reader"
-  scope       = data.azurerm_subscription.primary.id
+  scope       = local.subscription_scope
   description = "This is a custom role created via Terraform"
 
   permissions {
@@ -107,6 +108,6 @@ resource "azurerm_role_definition" "aks_reader" {
   }
 
   assignable_scopes = [
-    data.azurerm_subscription.primary.id
+    local.subscription_scope
   ]
 }

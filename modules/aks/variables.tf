@@ -8,6 +8,12 @@ variable "rg_name" {
   nullable = false
 }
 
+variable "subscription_id" {
+  type        = string
+  description = "Azure subscription ID used to scope custom roles"
+  nullable    = false
+}
+
 variable "ca_tls_crt" {
   type      = string
   sensitive = true
