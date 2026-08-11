@@ -14,9 +14,9 @@ the infrastructure required for the Compose migration.
   disk named `disk-services`. All three use ext4.
 - VNet `vnet-main` (`10.42.0.0/16`) with private subnet `snet-services`
   (`10.42.1.0/24`), and VM private address `10.42.1.4` on `nic-vm01`.
-- Standard static public IP `pip-vm01` provides explicit outbound connectivity
-  only. The subnet-level `nsg-services` has an explicit deny-all inbound rule;
-  no host port, including SSH, is exposed publicly.
+- Standard static public IP `pip-vm01` provides outbound connectivity and direct
+  SSH administration. The subnet-level `nsg-services` permits public TCP/22 and
+  explicitly denies every other inbound flow.
 - Debian uses a 4 GiB swap file with swappiness 10. SSH permits only the
   `pnadmin` public key; root, password and keyboard-interactive login are
   disabled. The Azure NSG is the host's network firewall, avoiding a second
@@ -40,13 +40,14 @@ the infrastructure required for the Compose migration.
   on an 80% forecast and actual spend at 75%, 85%, 95% and 100%. Budgets notify
   `adminorg@polinetwork.org` and never stop resources automatically.
 
-The public IP is not an administration endpoint. Normal SSH access will traverse
-Cloudflare Zero Trust and the outbound-only Cloudflare Tunnel. Bootstrap and
-recovery use Azure Run Command/Serial Console until that authenticated path is
-available. The SSH key is break-glass material; there is no public SSH NSG rule.
-Its private key is stored as `compose-vm-ssh-private-key` in Azure Key Vault.
-Terraform reads only `compose-vm-ssh-public-key` from the same vault. The
-repository and its automation depend only on organization-owned Azure resources.
+Normal administration uses direct SSH to the static public IP. TCP/22 is
+reachable from any IPv4 address because administrators do not share a stable
+source range, but sshd accepts only the `pnadmin` key: root, passwords and
+keyboard-interactive authentication are disabled. Azure Run Command and Serial
+Console remain recovery channels. The private key is stored as
+`compose-vm-ssh-private-key` in Azure Key Vault. Terraform reads only
+`compose-vm-ssh-public-key` from the same vault. The repository and its
+automation depend only on organization-owned Azure resources.
 
 ## Validation and first plan
 

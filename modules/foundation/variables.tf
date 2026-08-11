@@ -41,7 +41,7 @@ variable "vm_size" {
 }
 
 variable "admin_username" {
-  description = "Local break-glass administrator. The NSG exposes no SSH ingress."
+  description = "SSH administrator exposed on TCP/22 with key-only authentication."
   type        = string
   default     = "pnadmin"
 
