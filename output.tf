@@ -26,6 +26,18 @@ output "backup_identity_principal_id" {
   value = module.foundation.backup_identity_principal_id
 }
 
+output "openbao_identity_client_id" {
+  value = azurerm_user_assigned_identity.openbao.client_id
+}
+
+output "openbao_identity_principal_id" {
+  value = azurerm_user_assigned_identity.openbao.principal_id
+}
+
+output "openbao_unseal_key_name" {
+  value = module.keyvault.openbao_unseal_key_name
+}
+
 output "private_ip_address" {
   value = module.foundation.private_ip_address
 }

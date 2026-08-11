@@ -10,6 +10,19 @@ locals {
   postgres_internal_ip = "postgres-service.postgres.svc.cluster.local"
 }
 
+resource "azurerm_user_assigned_identity" "openbao" {
+  name                = "id-vm01-openbao"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  tags = {
+    Environment = "production"
+    ManagedBy   = "terraform"
+    Migration   = "aks-to-compose"
+    Owner       = "PoliNetwork"
+    Purpose     = "openbao-auto-unseal"
+  }
+}
+
 module "aks" {
   depends_on = [module.keyvault]
   source     = "./modules/aks/"
@@ -92,6 +105,8 @@ module "keyvault" {
   tenant_id = data.azurerm_client_config.current.tenant_id
   object_id = data.azurerm_client_config.current.object_id
 
+  openbao_identity_principal_id = azurerm_user_assigned_identity.openbao.principal_id
+
   allowed_ips = []
 }
 
@@ -110,6 +125,8 @@ module "foundation" {
   rg_id          = azurerm_resource_group.rg.id
   rg_name        = azurerm_resource_group.rg.name
   ssh_public_key = data.azurerm_key_vault_secret.compose_vm_ssh_public_key.value
+
+  openbao_identity_id = azurerm_user_assigned_identity.openbao.id
 }
 
 module "mariadb" {

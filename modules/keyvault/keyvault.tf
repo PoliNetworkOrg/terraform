@@ -22,7 +22,8 @@ resource "azurerm_key_vault" "keyvalue" {
       object_id = "6b6a6388-c024-450b-80b4-9dcfa474c9f0"
 
       key_permissions = ["Get", "List", "Update", "Create", "Import", "Delete",
-        "Recover", "Backup", "Restore"
+        "Recover", "Backup", "Restore", "Rotate", "GetRotationPolicy",
+        "SetRotationPolicy"
       ]
 
       secret_permissions = ["Get", "List", "Set", "Delete", "Recover", "Backup",
@@ -94,5 +95,36 @@ resource "azurerm_key_vault" "keyvalue" {
       storage_permissions = []
       tenant_id           = var.tenant_id
     },
+    {
+      tenant_id               = var.tenant_id
+      object_id               = var.openbao_identity_principal_id
+      key_permissions         = ["Get", "WrapKey", "UnwrapKey"]
+      secret_permissions      = []
+      certificate_permissions = []
+      storage_permissions     = []
+      application_id          = null
+    },
   ]
+}
+
+resource "azurerm_key_vault_key" "openbao_unseal" {
+  name         = "openbao-unseal"
+  key_vault_id = azurerm_key_vault.keyvalue.id
+  key_type     = "RSA"
+  key_size     = 3072
+  key_opts     = ["unwrapKey", "wrapKey"]
+
+  rotation_policy {
+    automatic {
+      time_before_expiry = "P30D"
+    }
+
+    expire_after         = "P1Y"
+    notify_before_expiry = "P30D"
+  }
+
+  tags = {
+    ManagedBy = "terraform"
+    Purpose   = "openbao-auto-unseal"
+  }
 }
