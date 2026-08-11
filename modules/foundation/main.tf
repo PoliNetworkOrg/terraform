@@ -1,32 +1,14 @@
-data "azurerm_resource_group" "target" {
-  name = var.resource_group_name
-}
-
-data "azurerm_key_vault" "polinetwork" {
-  name                = "kv-polinetwork"
-  resource_group_name = data.azurerm_resource_group.target.name
-}
-
-data "azurerm_key_vault_secret" "vm_ssh_public_key" {
-  name         = "compose-vm-ssh-public-key"
-  key_vault_id = data.azurerm_key_vault.polinetwork.id
-}
-
-locals {
-  prefix = "pn-compose-prod"
-}
-
 resource "azurerm_virtual_network" "main" {
   name                = "vnet-main"
   location            = var.location
-  resource_group_name = data.azurerm_resource_group.target.name
+  resource_group_name = var.rg_name
   address_space       = ["10.42.0.0/16"]
   tags                = var.tags
 }
 
 resource "azurerm_subnet" "host" {
   name                            = "snet-services"
-  resource_group_name             = data.azurerm_resource_group.target.name
+  resource_group_name             = var.rg_name
   virtual_network_name            = azurerm_virtual_network.main.name
   address_prefixes                = ["10.42.1.0/24"]
   default_outbound_access_enabled = false
@@ -36,7 +18,7 @@ resource "azurerm_subnet" "host" {
 resource "azurerm_network_security_group" "host" {
   name                = "nsg-services"
   location            = var.location
-  resource_group_name = data.azurerm_resource_group.target.name
+  resource_group_name = var.rg_name
   tags                = var.tags
 
   security_rule {
@@ -55,7 +37,7 @@ resource "azurerm_network_security_group" "host" {
 resource "azurerm_public_ip" "egress" {
   name                = "pip-vm01"
   location            = var.location
-  resource_group_name = data.azurerm_resource_group.target.name
+  resource_group_name = var.rg_name
   allocation_method   = "Static"
   sku                 = "Standard"
   tags                = var.tags
@@ -65,7 +47,7 @@ resource "azurerm_network_interface" "host" {
   #checkov:skip=CKV_AZURE_119:The static public IP provides explicit outbound connectivity only; the subnet NSG denies every inbound flow.
   name                           = "nic-vm01"
   location                       = var.location
-  resource_group_name            = data.azurerm_resource_group.target.name
+  resource_group_name            = var.rg_name
   accelerated_networking_enabled = true
   tags                           = var.tags
 
@@ -86,7 +68,7 @@ resource "azurerm_subnet_network_security_group_association" "host" {
 resource "azurerm_user_assigned_identity" "backup" {
   name                = "id-vm01-backup"
   location            = var.location
-  resource_group_name = data.azurerm_resource_group.target.name
+  resource_group_name = var.rg_name
   tags                = merge(var.tags, { Purpose = "backup" })
 }
 
@@ -95,7 +77,7 @@ resource "azurerm_linux_virtual_machine" "host" {
   name                            = "vm01"
   computer_name                   = "vm01"
   location                        = var.location
-  resource_group_name             = data.azurerm_resource_group.target.name
+  resource_group_name             = var.rg_name
   size                            = var.vm_size
   admin_username                  = var.admin_username
   disable_password_authentication = true
@@ -112,7 +94,7 @@ resource "azurerm_linux_virtual_machine" "host" {
 
   admin_ssh_key {
     username   = var.admin_username
-    public_key = trimspace(data.azurerm_key_vault_secret.vm_ssh_public_key.value)
+    public_key = trimspace(var.ssh_public_key)
   }
 
   identity {
@@ -143,7 +125,7 @@ resource "azurerm_managed_disk" "state" {
   #checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
   name                          = "disk-core"
   location                      = var.location
-  resource_group_name           = data.azurerm_resource_group.target.name
+  resource_group_name           = var.rg_name
   storage_account_type          = "Premium_LRS"
   create_option                 = "Empty"
   disk_size_gb                  = 32
@@ -167,7 +149,7 @@ resource "azurerm_managed_disk" "applications" {
   #checkov:skip=CKV_AZURE_93:Platform-managed disk encryption was selected to avoid a Key Vault dependency that could prevent VM recovery.
   name                          = "disk-services"
   location                      = var.location
-  resource_group_name           = data.azurerm_resource_group.target.name
+  resource_group_name           = var.rg_name
   storage_account_type          = "StandardSSD_LRS"
   create_option                 = "Empty"
   disk_size_gb                  = 64
@@ -195,7 +177,7 @@ resource "azurerm_storage_account" "backup" {
   #checkov:skip=CKV_AZURE_33:This dedicated account uses Blob only and has no Queue workload to audit.
   #checkov:skip=CKV2_AZURE_1:Platform-managed keys plus infrastructure encryption and encrypted backup archives avoid a Key Vault recovery dependency.
   name                              = var.backup_storage_account_name
-  resource_group_name               = data.azurerm_resource_group.target.name
+  resource_group_name               = var.rg_name
   location                          = var.location
   account_tier                      = "Standard"
   account_replication_type          = "ZRS"
@@ -286,7 +268,7 @@ resource "azurerm_role_assignment" "vm_backup_writer" {
 
 resource "azurerm_consumption_budget_resource_group" "monthly" {
   name              = "budget-rg-polinetwork-monthly"
-  resource_group_id = data.azurerm_resource_group.target.id
+  resource_group_id = var.rg_id
   amount            = var.monthly_budget_amount_usd
   time_grain        = "Monthly"
 
@@ -329,7 +311,7 @@ resource "azurerm_consumption_budget_resource_group" "monthly" {
 
 resource "azurerm_consumption_budget_resource_group" "annual" {
   name              = "budget-rg-polinetwork-annual-safety"
-  resource_group_id = data.azurerm_resource_group.target.id
+  resource_group_id = var.rg_id
   amount            = var.annual_budget_amount_usd
   time_grain        = "Annually"
 

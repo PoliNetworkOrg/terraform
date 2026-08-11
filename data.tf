@@ -8,11 +8,6 @@ data "azurerm_key_vault_secret" "amp_license" {
   key_vault_id = module.keyvault.key_vault_id
 }
 
-data "azurerm_key_vault_secret" "grafana_admin_password" {
-  name         = "grafana-admin-password"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
 data "azurerm_key_vault_secret" "dev_aule_bot_token" {
   name         = "dev-aule-bot-token"
   key_vault_id = module.keyvault.key_vault_id
@@ -46,6 +41,11 @@ data "azurerm_key_vault_secret" "ca_tls_key" {
 
 data "azurerm_key_vault_secret" "cloudflare_tunnel_token" {
   name         = "cloudflare-tunnel-token"
+  key_vault_id = module.keyvault.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "compose_vm_ssh_public_key" {
+  name         = "compose-vm-ssh-public-key"
   key_vault_id = module.keyvault.key_vault_id
 }
 
@@ -131,16 +131,6 @@ data "azurerm_key_vault_secret" "prod_mat_db_password" {
 
 data "azurerm_key_vault_secret" "prod_mat_db_user" {
   name         = "prod-mat-db-user"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "cluster_monitoring_app_password" {
-  name         = "cluster-monitoring-app-password"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "cluster_monitoring_telegram_token" {
-  name         = "cluster-monitoring-telegram-token"
   key_vault_id = module.keyvault.key_vault_id
 }
 

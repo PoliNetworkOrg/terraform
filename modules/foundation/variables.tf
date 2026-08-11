@@ -1,17 +1,31 @@
-variable "resource_group_name" {
-  description = "Existing resource group that hosts the current and migration infrastructure."
+variable "rg_name" {
+  description = "Name of the resource group shared with the existing infrastructure."
   type        = string
-  default     = "rg-polinetwork"
+}
+
+variable "rg_id" {
+  description = "Resource ID of the shared resource group."
+  type        = string
 }
 
 variable "location" {
   description = "Azure region approved by the migration plan."
   type        = string
-  default     = "westeurope"
 
   validation {
-    condition     = var.location == "westeurope"
+    condition     = lower(replace(var.location, " ", "")) == "westeurope"
     error_message = "The migration is costed and approved only for West Europe."
+  }
+}
+
+variable "ssh_public_key" {
+  description = "Public SSH key read by the root module from the organization Key Vault."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^ssh-(ed25519|rsa|ecdsa-[^ ]+) ", trimspace(var.ssh_public_key)))
+    error_message = "The VM administrator key must be a supported OpenSSH public key."
   }
 }
 

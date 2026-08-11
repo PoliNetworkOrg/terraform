@@ -1,8 +1,8 @@
-# ARM64 migration foundation
+# ARM64 migration foundation module
 
-This Terraform root is intentionally independent from the AKS state. It creates
-only the parallel migration foundation in the existing `rg-polinetwork` resource
-group; it cannot delete or modify AKS.
+This module is part of the repository's single Terraform root and state. It is
+instantiated alongside the existing Key Vault, Storage and AKS modules and adds
+the infrastructure required for the Compose migration.
 
 ## Fixed decisions
 
@@ -48,28 +48,19 @@ Its private key is stored as `compose-vm-ssh-private-key` in Azure Key Vault.
 Terraform reads only `compose-vm-ssh-public-key` from the same vault. The
 repository and its automation depend only on organization-owned Azure resources.
 
-## State isolation
-
-The backend key is `migration-foundation.tfstate`; the existing AKS root keeps
-using `state.tfstate`. Never move AKS resources into this state and never run a
-combined create/destroy apply.
-
 ## Validation and first plan
 
 ```bash
-cp terraform.tfvars.example terraform.tfvars
-# Confirm the budget date and recipients.
-source ../access_key.sh
+source ./access_key.sh
 terraform init
 terraform validate
-terraform plan -out foundation.tfplan
-terraform show foundation.tfplan
+terraform plan -out tfplan
+terraform show tfplan
 ```
 
-Do not apply until the plan shows only the resources declared in this directory,
-the Azure price check remains within the migration budget, and the operator has
-confirmed the exact SSH public key. `terraform.tfvars` and plan files must remain
-untracked.
+Do not apply until the unified root plan adds only the approved migration
+resources, changes or destroys no existing resources, and the Azure price check
+remains within the migration budget. Plan files must remain untracked.
 
 Cloud-init applies the host-level kernel settings and installs an idempotent
 systemd oneshot service that waits for both data disks. The service formats a

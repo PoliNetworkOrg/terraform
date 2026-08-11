@@ -20,4 +20,9 @@ resource "helm_release" "longhorn" {
     name  = "defaultSettings.defaultReplicaCount"
     value = "1"
   }
+
+  set {
+    name  = "defaultSettings.guaranteedInstanceManagerCPU"
+    value = "6"
+  }
 }
