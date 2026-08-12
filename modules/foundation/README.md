@@ -25,7 +25,9 @@ the infrastructure required for the Compose migration.
   `unattended-upgrades`, but automatic operating-system reboots are disabled.
 - Separate Cool ZRS storage account `polinetworkbackups` with a private
   `backups` container, blob versioning, 30-day soft deletion, 30-day unlocked
-  immutable retention and 90-day lifecycle retention.
+  immutable retention and 90-day lifecycle retention. A separate private
+  `zerobyte` container has no immutability policy or lifecycle deletion rule:
+  Restic exclusively manages repository retention and pruning there.
 - Shared access keys are enabled for Zerobyte's native Azure Blob backend. The
   selected account key is stored only in the existing `kv-polinetwork` Key
   Vault and transferred during bootstrap/restore to a mode-`0600` file mounted
@@ -37,7 +39,8 @@ the infrastructure required for the Compose migration.
   upload. Customer-managed keys are intentionally excluded to
   avoid making VM and backup recovery depend on Key Vault availability.
 - The storage firewall permits the `snet-services` service endpoint only;
-  anonymous access and shared keys are disabled. A dedicated user-assigned
+  anonymous access is disabled. Shared keys are enabled only because
+  Zerobyte's native Azure backend requires one. A dedicated user-assigned
   identity `id-vm01-backup` receives `Storage Blob Data Contributor` only on
   the backup container.
 - The VM also receives the dedicated user-assigned identity
