@@ -9,13 +9,13 @@ output "vm_principal_id" {
 }
 
 output "backup_identity_client_id" {
-  description = "Client ID selected by backup jobs when requesting managed-identity tokens."
-  value       = azurerm_user_assigned_identity.backup.client_id
+  description = "Client ID selected by backup and bootstrap recovery jobs when requesting managed-identity tokens."
+  value       = var.backup_identity_client_id
 }
 
 output "backup_identity_principal_id" {
-  description = "Principal ID with write access to the backup container."
-  value       = azurerm_user_assigned_identity.backup.principal_id
+  description = "Principal ID with backup-container write and bootstrap Key Vault read access."
+  value       = var.backup_identity_principal_id
 }
 
 output "private_ip_address" {

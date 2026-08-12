@@ -39,6 +39,36 @@ variable "openbao_identity_id" {
   }
 }
 
+variable "backup_identity_id" {
+  description = "Resource ID of the user-assigned identity used for backup and bootstrap recovery."
+  type        = string
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[^/]+$", var.backup_identity_id))
+    error_message = "Backup identity must be a user-assigned managed identity resource ID."
+  }
+}
+
+variable "backup_identity_client_id" {
+  description = "Client ID selected explicitly by backup and bootstrap recovery jobs."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-fA-F-]{36}$", var.backup_identity_client_id))
+    error_message = "Backup identity client ID must be a UUID."
+  }
+}
+
+variable "backup_identity_principal_id" {
+  description = "Principal ID receiving backup-container and bootstrap Key Vault access."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-fA-F-]{36}$", var.backup_identity_principal_id))
+    error_message = "Backup identity principal ID must be a UUID."
+  }
+}
+
 variable "vm_size" {
   description = "ARM64 VM SKU approved by the cost and capacity gates."
   type        = string

@@ -77,13 +77,6 @@ resource "azurerm_subnet_network_security_group_association" "host" {
   network_security_group_id = azurerm_network_security_group.host.id
 }
 
-resource "azurerm_user_assigned_identity" "backup" {
-  name                = "id-vm01-backup"
-  location            = var.location
-  resource_group_name = var.rg_name
-  tags                = merge(var.tags, { Purpose = "backup" })
-}
-
 resource "azurerm_linux_virtual_machine" "host" {
   #checkov:skip=CKV_AZURE_50:Azure Run Command recovery requires extension operations, but no persistent VM extension is declared.
   name                            = "vm01"
@@ -111,7 +104,7 @@ resource "azurerm_linux_virtual_machine" "host" {
 
   identity {
     type         = "SystemAssigned, UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.backup.id, var.openbao_identity_id]
+    identity_ids = [var.backup_identity_id, var.openbao_identity_id]
   }
 
   os_disk {
@@ -287,7 +280,7 @@ resource "azurerm_storage_management_policy" "backup" {
 resource "azurerm_role_assignment" "vm_backup_writer" {
   scope                = azurerm_storage_container.backup.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_user_assigned_identity.backup.principal_id
+  principal_id         = var.backup_identity_principal_id
   principal_type       = "ServicePrincipal"
 }
 

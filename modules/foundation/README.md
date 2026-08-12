@@ -30,19 +30,24 @@ the infrastructure required for the Compose migration.
   Restic exclusively manages repository retention and pruning there.
 - Shared access keys are enabled for Zerobyte's native Azure Blob backend. The
   selected account key is stored only in the existing `kv-polinetwork` Key
-  Vault and transferred during bootstrap/restore to a mode-`0600` file mounted
-  only into Zerobyte; it must not enter Terraform state, Git or Compose
+  Vault and retrieved during bootstrap/restore through managed identity into a
+  temporary mode-`0600` file; it must not enter Terraform state, Git or Compose
   environment variables. The key grants account-wide data access and must be
   rotated after any Zerobyte or host compromise.
 - OS and data disks use Azure platform-managed encryption. Backup storage adds
   infrastructure encryption, while Restic encrypts backup content before
-  upload. Customer-managed keys are intentionally excluded to
-  avoid making VM and backup recovery depend on Key Vault availability.
+  upload. Customer-managed disk-encryption keys are intentionally excluded so
+  disk attachment does not add another Key Vault dependency. Platform
+  recovery already requires Key Vault for OpenBao Auto Unseal and guarded
+  bootstrap-secret retrieval, with the active Restic password also retained in
+  independent break-glass custody.
 - The storage firewall permits the `snet-services` service endpoint only;
   anonymous access is disabled. Shared keys are enabled only because
   Zerobyte's native Azure backend requires one. A dedicated user-assigned
   identity `id-vm01-backup` receives `Storage Blob Data Contributor` only on
-  the backup container.
+  the backup container and Key Vault secret `Get` without `List` for guarded
+  bootstrap recovery. The vault's access-policy model cannot scope `Get` to
+  individual secret names; the bootstrap allowlists its required names.
 - The VM also receives the dedicated user-assigned identity
   `id-vm01-openbao`. It has only metadata and wrap/unwrap access to the
   `openbao-unseal` key in the existing organization Key Vault, so OpenBao can

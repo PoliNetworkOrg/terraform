@@ -23,6 +23,24 @@ resource "azurerm_user_assigned_identity" "openbao" {
   }
 }
 
+moved {
+  from = module.foundation.azurerm_user_assigned_identity.backup
+  to   = azurerm_user_assigned_identity.backup
+}
+
+resource "azurerm_user_assigned_identity" "backup" {
+  name                = "id-vm01-backup"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  tags = {
+    Environment = "production"
+    ManagedBy   = "terraform"
+    Migration   = "aks-to-compose"
+    Owner       = "PoliNetwork"
+    Purpose     = "backup-and-bootstrap-recovery"
+  }
+}
+
 module "aks" {
   depends_on = [module.keyvault]
   source     = "./modules/aks/"
@@ -107,6 +125,7 @@ module "keyvault" {
   object_id = data.azurerm_client_config.current.object_id
 
   openbao_identity_principal_id = azurerm_user_assigned_identity.openbao.principal_id
+  backup_identity_principal_id  = azurerm_user_assigned_identity.backup.principal_id
 
   allowed_ips = []
 }
@@ -127,7 +146,10 @@ module "foundation" {
   rg_name        = azurerm_resource_group.rg.name
   ssh_public_key = data.azurerm_key_vault_secret.compose_vm_ssh_public_key.value
 
-  openbao_identity_id = azurerm_user_assigned_identity.openbao.id
+  openbao_identity_id          = azurerm_user_assigned_identity.openbao.id
+  backup_identity_id           = azurerm_user_assigned_identity.backup.id
+  backup_identity_client_id    = azurerm_user_assigned_identity.backup.client_id
+  backup_identity_principal_id = azurerm_user_assigned_identity.backup.principal_id
 }
 
 module "mariadb" {

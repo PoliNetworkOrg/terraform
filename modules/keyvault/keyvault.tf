@@ -112,6 +112,15 @@ resource "azurerm_key_vault" "keyvalue" {
       storage_permissions     = []
       application_id          = null
     },
+    {
+      tenant_id               = var.tenant_id
+      object_id               = var.backup_identity_principal_id
+      key_permissions         = []
+      secret_permissions      = ["Get"]
+      certificate_permissions = []
+      storage_permissions     = []
+      application_id          = null
+    },
   ]
 }
 
