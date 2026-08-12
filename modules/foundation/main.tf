@@ -237,6 +237,19 @@ resource "azurerm_storage_container" "backup" {
   container_access_type = "private"
 }
 
+# Restic must be able to remove repository locks and obsolete packs. Keep this
+# container outside the WORM policy and lifecycle deletion rule used by the raw
+# backup archive above; retention inside this repository is owned by Restic.
+resource "azurerm_storage_container" "zerobyte" {
+  name                  = "zerobyte"
+  storage_account_id    = azurerm_storage_account.backup.id
+  container_access_type = "private"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "azurerm_storage_container_immutability_policy" "backup" {
   storage_container_resource_manager_id = azurerm_storage_container.backup.id
   immutability_period_in_days           = 30
