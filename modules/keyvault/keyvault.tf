@@ -57,6 +57,7 @@ resource "azurerm_key_vault" "keyvalue" {
       key_permissions = [
         "Get",
         "List",
+        "GetRotationPolicy",
       ]
       object_id = "81dd9fd1-ea71-420a-9f8a-8cbb74f479a6"
       secret_permissions = [
