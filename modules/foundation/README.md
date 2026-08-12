@@ -26,9 +26,15 @@ the infrastructure required for the Compose migration.
 - Separate Cool ZRS storage account `polinetworkbackups` with a private
   `backups` container, blob versioning, 30-day soft deletion, 30-day unlocked
   immutable retention and 90-day lifecycle retention.
+- Shared access keys are enabled for Zerobyte's native Azure Blob backend. The
+  selected account key is stored only in the existing `kv-polinetwork` Key
+  Vault and transferred during bootstrap/restore to a mode-`0600` file mounted
+  only into Zerobyte; it must not enter Terraform state, Git or Compose
+  environment variables. The key grants account-wide data access and must be
+  rotated after any Zerobyte or host compromise.
 - OS and data disks use Azure platform-managed encryption. Backup storage adds
-  infrastructure encryption, while backup archives will be encrypted by the
-  backup application. Customer-managed keys are intentionally excluded to
+  infrastructure encryption, while Restic encrypts backup content before
+  upload. Customer-managed keys are intentionally excluded to
   avoid making VM and backup recovery depend on Key Vault availability.
 - The storage firewall permits the `snet-services` service endpoint only;
   anonymous access and shared keys are disabled. A dedicated user-assigned
