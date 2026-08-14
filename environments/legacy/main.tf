@@ -8,42 +8,49 @@ data "azurerm_client_config" "current" {}
 locals {
   mariadb_internal_ip  = "mariadb-service.mariadb.svc.cluster.local"
   postgres_internal_ip = "postgres-service.postgres.svc.cluster.local"
-}
-
-resource "azurerm_user_assigned_identity" "openbao" {
-  name                = "id-vm01-openbao"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tags = {
-    Environment = "production"
-    ManagedBy   = "terraform"
-    Migration   = "aks-to-compose"
-    Owner       = "PoliNetwork"
-    Purpose     = "openbao-auto-unseal"
-  }
+  backup_allowed_subnet_ids = [
+    "${azurerm_resource_group.rg.id}/providers/Microsoft.Network/virtualNetworks/vnet-k3s/subnets/snet-k3s",
+  ]
 }
 
 moved {
-  from = module.foundation.azurerm_user_assigned_identity.backup
-  to   = azurerm_user_assigned_identity.backup
+  from = module.foundation.azurerm_storage_account.backup
+  to   = module.shared.azurerm_storage_account.backup
 }
 
-resource "azurerm_user_assigned_identity" "backup" {
-  name                = "id-vm01-backup"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tags = {
-    Environment = "production"
-    ManagedBy   = "terraform"
-    Migration   = "aks-to-compose"
-    Owner       = "PoliNetwork"
-    Purpose     = "backup-and-bootstrap-recovery"
-  }
+moved {
+  from = module.foundation.azurerm_storage_container.backup
+  to   = module.shared.azurerm_storage_container.backup
+}
+
+moved {
+  from = module.foundation.azurerm_storage_container.zerobyte
+  to   = module.shared.azurerm_storage_container.zerobyte
+}
+
+moved {
+  from = module.foundation.azurerm_storage_container_immutability_policy.backup
+  to   = module.shared.azurerm_storage_container_immutability_policy.backup
+}
+
+moved {
+  from = module.foundation.azurerm_storage_management_policy.backup
+  to   = module.shared.azurerm_storage_management_policy.backup
+}
+
+moved {
+  from = module.foundation.azurerm_consumption_budget_resource_group.monthly
+  to   = module.shared.azurerm_consumption_budget_resource_group.monthly
+}
+
+moved {
+  from = module.foundation.azurerm_consumption_budget_resource_group.annual
+  to   = module.shared.azurerm_consumption_budget_resource_group.annual
 }
 
 module "aks" {
   depends_on = [module.keyvault]
-  source     = "./modules/aks/"
+  source     = "../../modules/aks/"
 
   ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key.value
   ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt.value
@@ -73,7 +80,7 @@ module "argo-cd" {
     module.aks
   ]
 
-  source = "./modules/argocd/"
+  source = "../../modules/argocd/"
   applications = [
     file("./argocd-applications.yaml")
   ]
@@ -84,7 +91,7 @@ module "cloudflare" {
     module.aks
   ]
 
-  source       = "./modules/cloudflare/"
+  source       = "../../modules/cloudflare/"
   tunnel_token = data.azurerm_key_vault_secret.cloudflare_tunnel_token.value
 }
 
@@ -93,7 +100,7 @@ module "app_dev" {
     module.mariadb
   ]
 
-  source = "./modules/app/"
+  source = "../../modules/app/"
 
   app_namespace    = "app-dev"
   app_secret_token = data.azurerm_key_vault_secret.dev_app_secret_token.value
@@ -108,14 +115,14 @@ module "kubernetes-dashboard" {
     module.aks
   ]
 
-  source = "./modules/kubernetes-dashboard/"
+  source = "../../modules/kubernetes-dashboard/"
 
   // variables
   namespace = "kubernetes-dashboard"
 }
 
 module "keyvault" {
-  source = "./modules/keyvault/"
+  source = "../../modules/keyvault/"
 
   name = "kv-polinetwork"
 
@@ -124,32 +131,24 @@ module "keyvault" {
   tenant_id = data.azurerm_client_config.current.tenant_id
   object_id = data.azurerm_client_config.current.object_id
 
-  openbao_identity_principal_id = azurerm_user_assigned_identity.openbao.principal_id
-  backup_identity_principal_id  = azurerm_user_assigned_identity.backup.principal_id
-
   allowed_ips = []
 }
 
 module "storageaccount" {
-  source = "./modules/storage"
+  source = "../../modules/storage"
 
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
 
 }
 
-module "foundation" {
-  source = "./modules/foundation"
+module "shared" {
+  source = "../../modules/shared"
 
-  location       = azurerm_resource_group.rg.location
-  rg_id          = azurerm_resource_group.rg.id
-  rg_name        = azurerm_resource_group.rg.name
-  ssh_public_key = data.azurerm_key_vault_secret.compose_vm_ssh_public_key.value
-
-  openbao_identity_id          = azurerm_user_assigned_identity.openbao.id
-  backup_identity_id           = azurerm_user_assigned_identity.backup.id
-  backup_identity_client_id    = azurerm_user_assigned_identity.backup.client_id
-  backup_identity_principal_id = azurerm_user_assigned_identity.backup.principal_id
+  location            = azurerm_resource_group.rg.location
+  resource_group_id   = azurerm_resource_group.rg.id
+  resource_group_name = azurerm_resource_group.rg.name
+  allowed_subnet_ids  = local.backup_allowed_subnet_ids
 }
 
 module "mariadb" {
@@ -158,7 +157,7 @@ module "mariadb" {
     module.argo-cd
   ]
 
-  source = "./modules/mariadb/"
+  source = "../../modules/mariadb/"
 
   db_config = [
     {
@@ -205,7 +204,7 @@ module "longhorn" {
     module.aks,
     module.argo-cd
   ]
-  source      = "./modules/longhorn/"
+  source      = "../../modules/longhorn/"
   rg_location = azurerm_resource_group.rg.location
   rg_name     = azurerm_resource_group.rg.name
 }
@@ -216,7 +215,7 @@ module "postgres" {
     module.argo-cd
   ]
 
-  source               = "./modules/postgres/"
+  source               = "../../modules/postgres/"
   postgres_internal_ip = local.postgres_internal_ip
 
   location = azurerm_resource_group.rg.location

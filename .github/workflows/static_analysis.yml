@@ -14,14 +14,14 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v3
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-          terraform_version: 1.4.0
+          terraform_version: 1.15.8
       
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
       - name: run_test
         run: |
           sudo apt install -y pre-commit gnupg software-properties-common

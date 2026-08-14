@@ -1,21 +1,56 @@
-# terraform
+# PoliNetwork Azure infrastructure
 
-## Notes
+Terraform is split into independent root modules. A root owns its resources;
+other roots can only consume them through data sources or explicit outputs.
 
-you must have `terraform` and `az` (azure) cli installed.
-you must login `az login` and set the correct subscription.
-then you must set the `ARM_ACCESS_KEY` to execute `terraform` commands, in linux/osx:
+| Root | Backend key | Ownership |
+|---|---|---|
+| `environments/legacy` | `state.tfstate` | Existing AKS platform, Kubernetes/Helm resources, `vm01`, and retained shared resources |
+| `environments/k3s` | `k3s.tfstate` | New single-node K3s target only |
+
+Moving the historical root into `environments/legacy` does not move or clone
+its state. Its backend key and all Terraform resource addresses remain the
+same. The `moved` blocks in that root extract `polinetworkbackups`, its
+containers, retention policy, and resource-group budgets from the retired
+`module.foundation` into `module.shared` without recreating them. The remaining
+foundation resources are explicitly deleted as the failed migration test.
+
+The K3s root reads `rg-polinetwork`, `polinetworksa/file-blobs`, and
+`polinetworkbackups/backups` as data sources. It must never import or declare
+those shared objects as resources.
+
+## Local checks
+
+Authenticate with Azure and provide the provider subscription explicitly:
 
 ```bash
-source ./access_key.sh
+az login
+az account set --subscription <subscription-id>
+export ARM_SUBSCRIPTION_ID=<subscription-id>
+export TF_VAR_subscription_id="$ARM_SUBSCRIPTION_ID"
+export TF_VAR_admin_ssh_public_key="$(< ~/.ssh/id_ed25519.pub)"
+
+terraform -chdir=environments/legacy init -backend-config=use_oidc=false
+terraform -chdir=environments/legacy validate
+terraform -chdir=environments/k3s init -backend-config=use_oidc=false
+terraform -chdir=environments/k3s validate
 ```
 
-if resource group or account name changes, change them accordingly
+The signed-in principal needs Blob data-plane access to the
+`terraform-state` container. If it does not have that RBAC role, load the
+backend credential through the existing secure operator procedure before
+running `init`; never pass an access key on the command line or commit it.
 
-## TODO
+Do not use `terraform destroy` at repository level. Always select one root with
+`-chdir` and inspect a saved plan before applying it.
 
-- [x] fix secrets for ci gh workflows
-- [x] clean unusued modules
-- [ ] upgrade providers to latest version (following migration guide)
-- [ ] better organization of the filebase
-- [x] double check that the backend is working correctly and that the saved state is as the real state
+## Delivery
+
+Pull requests validate and plan both roots. A merge does not apply Terraform.
+Production apply is a manual `workflow_dispatch` operation protected by the
+GitHub `production` environment; the operator must select one root and type
+`APPLY`. The K3s apply also requires the `K3S_ADMIN_SSH_PUBLIC_KEY` repository
+secret.
+
+See [STATE_MIGRATION.md](STATE_MIGRATION.md) for the one-time rollout sequence
+and the guardrails for removing the failed `vm01` attempt.
