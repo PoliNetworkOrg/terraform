@@ -19,6 +19,7 @@ plan_steps = plan.fetch("steps", [])
 plan_commands = plan_steps.map { |step| step["run"] }.compact.join("\n")
 errors << "plan must use detailed exit codes" unless plan_commands.include?("-detailed-exitcode")
 errors << "plan must save its exit code for downstream jobs" unless plan_commands.include?("exitcode.txt")
+errors << "plan must render the saved plan without command output" unless plan_commands.include?("terraform show -no-color tfplan > plan.diff")
 
 artifact_step = plan_steps.find { |step| step["uses"]&.start_with?("actions/upload-artifact@") }
 artifact_name = artifact_step&.dig("with", "name")
@@ -30,6 +31,7 @@ comment_source = comment.fetch("steps", []).map { |step| [step["run"], step.dig(
 errors << "the PR comment must include the legacy plan" unless comment_source.include?("legacy")
 errors << "the PR comment must include the k3s plan" unless comment_source.include?("k3s")
 errors << "the PR comment must be updated instead of duplicated" unless comment_source.include?("updateComment")
+errors << "the PR comment must read only the rendered plan diff" unless comment_source.include?("plan.diff") && !comment_source.include?("plan.txt")
 
 changes = jobs.fetch("changes", {})
 errors << "a push job must detect whether either plan contains changes" unless changes.fetch("if", "").include?("push")

@@ -95,6 +95,8 @@ jobs:
           if [ "$exitcode" -eq 1 ]; then
             exit 1
           fi
+      - name: Render plan diff
+        run: terraform show -no-color tfplan > plan.diff
       - name: Add plan to job summary
         run: |
           {
@@ -102,7 +104,7 @@ jobs:
             echo '<details><summary>Show plan</summary>'
             echo
             echo '```terraform'
-            cat plan.txt
+            cat plan.diff
             echo '```'
             echo '</details>'
           } >> "$GITHUB_STEP_SUMMARY"
@@ -112,7 +114,7 @@ jobs:
           name: tfplan-${{ matrix.environment }}
           path: |
             environments/${{ matrix.environment }}/tfplan
-            environments/${{ matrix.environment }}/plan.txt
+            environments/${{ matrix.environment }}/plan.diff
             environments/${{ matrix.environment }}/exitcode.txt
           retention-days: 1
           if-no-files-found: error
@@ -136,10 +138,10 @@ jobs:
             const marker = '<!-- terraform-environments-plan -->';
 
             function section(environment) {
-              const path = `plans/tfplan-${environment}/plan.txt`;
+              const path = `plans/tfplan-${environment}/plan.diff`;
               let plan = fs.readFileSync(path, 'utf8');
               if (plan.length > 30_000) {
-                plan = `${plan.slice(0, 30_000)}\n\n... plan truncated; see the workflow artifact for the complete output.`;
+                plan = `${plan.slice(0, 30_000)}\n\n... plan diff truncated; see the workflow artifact for the complete diff.`;
               }
               return `### ${environment}\n\n<details><summary>Show plan</summary>\n\n\`\`\`terraform\n${plan}\n\`\`\`\n</details>`;
             }
