@@ -19,8 +19,11 @@ env:
 
 jobs:
   terraform-plan:
-    name: 'Terraform Plan'
+    name: 'Terraform Plan (legacy)'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/legacy
     outputs:
       tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
 

@@ -44,11 +44,6 @@ data "azurerm_key_vault_secret" "cloudflare_tunnel_token" {
   key_vault_id = module.keyvault.key_vault_id
 }
 
-data "azurerm_key_vault_secret" "compose_vm_ssh_public_key" {
-  name         = "compose-vm-ssh-public-key"
-  key_vault_id = module.keyvault.key_vault_id
-}
-
 data "azurerm_key_vault_secret" "argocd_client_secret" {
   name         = "argocd-client-secret"
   key_vault_id = module.keyvault.key_vault_id
