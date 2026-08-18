@@ -5,23 +5,11 @@ on:
     branches: [stable]
   push:
     branches: [stable]
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: Root Terraform to apply
-        required: true
-        type: choice
-        options:
-          - legacy
-          - k3s
-      confirmation:
-        description: Type APPLY to create and apply a fresh reviewed plan
-        required: true
-        type: string
 
 permissions:
   contents: read
   id-token: write
+  pull-requests: write
 
 env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -35,7 +23,6 @@ env:
 
 jobs:
   validate:
-    if: github.event_name != 'workflow_dispatch'
     name: Validate (${{ matrix.environment }})
     runs-on: ubuntu-24.04
     strategy:
@@ -56,7 +43,6 @@ jobs:
         run: terraform validate -no-color
 
   plan:
-    if: github.event_name != 'workflow_dispatch'
     name: Plan (${{ matrix.environment }})
     runs-on: ubuntu-24.04
     needs: validate
@@ -68,9 +54,8 @@ jobs:
       run:
         working-directory: environments/${{ matrix.environment }}
     env:
-      # A real operator key is required only when applying. This syntactically
-      # valid public key lets PR plans evaluate the VM schema without exposing
-      # or persisting a personal key.
+      # PRs cannot read production secrets. This valid key lets their K3s plan
+      # evaluate the VM schema. Stable pushes replace it before planning.
       TF_VAR_admin_ssh_public_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILQjBf4Q5OCGhvRHV2HBXI2Td1TmGTHoKZBSwQ+bhagJ terraform-plan-only
     steps:
       - uses: actions/checkout@v4
@@ -86,26 +71,148 @@ jobs:
       - name: Load AKS credentials for the legacy providers
         if: matrix.environment == 'legacy'
         run: az aks get-credentials --resource-group rg-polinetwork --name aks-polinetwork --admin --overwrite-existing
+      - name: Use the production K3s administrator key
+        if: github.event_name == 'push' && matrix.environment == 'k3s'
+        env:
+          K3S_ADMIN_SSH_PUBLIC_KEY: ${{ secrets.K3S_ADMIN_SSH_PUBLIC_KEY }}
+        run: |
+          test -n "$K3S_ADMIN_SSH_PUBLIC_KEY"
+          echo "TF_VAR_admin_ssh_public_key=$K3S_ADMIN_SSH_PUBLIC_KEY" >> "$GITHUB_ENV"
       - name: Initialize remote state
         run: terraform init
-      - name: Create plan
-        run: terraform plan -lock=false -no-color -out=tfplan
+      - name: Create saved plan
+        id: terraform-plan
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -lock=false -no-color -out=tfplan > plan.txt 2>&1
+          exitcode=$?
+          set -e
+
+          cat plan.txt
+          echo "$exitcode" > exitcode.txt
+          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
+
+          if [ "$exitcode" -eq 1 ]; then
+            exit 1
+          fi
+      - name: Render plan diff
+        run: terraform show -no-color tfplan > plan.diff
       - name: Add plan to job summary
         run: |
-          echo "## ${{ matrix.environment }}" >> "$GITHUB_STEP_SUMMARY"
-          terraform show -json tfplan \
-            | jq -r '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "- `\(.change.actions | join(","))` `\(.address)`"' \
-            >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## ${{ matrix.environment }} plan"
+            echo '<details><summary>Show plan</summary>'
+            echo
+            echo '```terraform'
+            cat plan.diff
+            echo '```'
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish saved plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ matrix.environment }}
+          path: |
+            environments/${{ matrix.environment }}/tfplan
+            environments/${{ matrix.environment }}/plan.diff
+            environments/${{ matrix.environment }}/exitcode.txt
+          retention-days: 1
+          if-no-files-found: error
+
+  comment:
+    if: github.event_name == 'pull_request'
+    name: Comment Terraform plans
+    runs-on: ubuntu-24.04
+    needs: plan
+    steps:
+      - name: Download plans
+        uses: actions/download-artifact@v4
+        with:
+          pattern: tfplan-*
+          path: plans
+      - name: Publish plans in the pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- terraform-environments-plan -->';
+
+            function section(environment) {
+              const path = `plans/tfplan-${environment}/plan.diff`;
+              let plan = fs.readFileSync(path, 'utf8');
+              if (plan.length > 30_000) {
+                plan = `${plan.slice(0, 30_000)}\n\n... plan diff truncated; see the workflow artifact for the complete diff.`;
+              }
+              return `### ${environment}\n\n<details><summary>Show plan</summary>\n\n\`\`\`terraform\n${plan}\n\`\`\`\n</details>`;
+            }
+
+            const body = `${marker}\n## Terraform plans\n\n${section('legacy')}\n\n${section('k3s')}`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const previous = comments.find(comment =>
+              comment.user.type === 'Bot' && comment.body.includes(marker)
+            );
+
+            if (previous) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: previous.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  changes:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stable'
+    name: Detect pending changes
+    runs-on: ubuntu-24.04
+    needs: plan
+    outputs:
+      has_changes: ${{ steps.detect.outputs.has_changes }}
+      legacy: ${{ steps.detect.outputs.legacy }}
+      k3s: ${{ steps.detect.outputs.k3s }}
+    steps:
+      - name: Download plan metadata
+        uses: actions/download-artifact@v4
+        with:
+          pattern: tfplan-*
+          path: plans
+      - name: Read plan exit codes
+        id: detect
+        run: |
+          legacy=$(cat plans/tfplan-legacy/exitcode.txt)
+          k3s=$(cat plans/tfplan-k3s/exitcode.txt)
+
+          case "$legacy:$k3s" in
+            0:0|0:2|2:0|2:2) ;;
+            *) echo "Unexpected plan exit codes: legacy=$legacy k3s=$k3s" >&2; exit 1 ;;
+          esac
+
+          echo "legacy=$legacy" >> "$GITHUB_OUTPUT"
+          echo "k3s=$k3s" >> "$GITHUB_OUTPUT"
+          if [ "$legacy" -eq 2 ] || [ "$k3s" -eq 2 ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
 
   apply:
-    if: github.event_name == 'workflow_dispatch' && inputs.confirmation == 'APPLY'
-    name: Apply (${{ inputs.environment }})
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stable' && needs.changes.outputs.has_changes == 'true'
+    name: Apply Terraform plans
     runs-on: ubuntu-24.04
+    needs: [plan, changes]
     environment: production
-    concurrency: terraform-${{ inputs.environment }}-production
-    defaults:
-      run:
-        working-directory: environments/${{ inputs.environment }}
+    concurrency: terraform-production
     env:
       TF_VAR_admin_ssh_public_key: ${{ secrets.K3S_ADMIN_SSH_PUBLIC_KEY }}
     steps:
@@ -119,15 +226,30 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
+      - name: Download K3s saved plan
+        if: needs.changes.outputs.k3s == '2'
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-k3s
+          path: environments/k3s
+      - name: Download legacy saved plan
+        if: needs.changes.outputs.legacy == '2'
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-legacy
+          path: environments/legacy
+      - name: Initialize K3s remote state
+        if: needs.changes.outputs.k3s == '2'
+        run: terraform -chdir=environments/k3s init
+      - name: Apply K3s saved plan
+        if: needs.changes.outputs.k3s == '2'
+        run: terraform -chdir=environments/k3s apply -auto-approve tfplan
       - name: Load AKS credentials for the legacy providers
-        if: inputs.environment == 'legacy'
+        if: needs.changes.outputs.legacy == '2'
         run: az aks get-credentials --resource-group rg-polinetwork --name aks-polinetwork --admin --overwrite-existing
-      - name: Require the K3s administrator key
-        if: inputs.environment == 'k3s'
-        run: test -n "$TF_VAR_admin_ssh_public_key"
-      - name: Initialize remote state
-        run: terraform init
-      - name: Create fresh plan
-        run: terraform plan -out=tfplan
-      - name: Apply the saved plan
-        run: terraform apply -auto-approve tfplan
+      - name: Initialize legacy remote state
+        if: needs.changes.outputs.legacy == '2'
+        run: terraform -chdir=environments/legacy init
+      - name: Apply legacy saved plan
+        if: needs.changes.outputs.legacy == '2'
+        run: terraform -chdir=environments/legacy apply -auto-approve tfplan

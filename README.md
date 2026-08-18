@@ -46,11 +46,12 @@ Do not use `terraform destroy` at repository level. Always select one root with
 
 ## Delivery
 
-Pull requests validate and plan both roots. A merge does not apply Terraform.
-Production apply is a manual `workflow_dispatch` operation protected by the
-GitHub `production` environment; the operator must select one root and type
-`APPLY`. The K3s apply also requires the `K3S_ADMIN_SSH_PUBLIC_KEY` repository
-secret.
+Pull requests validate and plan both roots, then update one PR comment with the
+`legacy` and `k3s` plans. A push to `stable` repeats both plans. If either plan
+contains changes, the workflow waits for approval through the GitHub
+`production` environment and applies the saved plans without recreating them.
+When both roots change, it applies `k3s` before `legacy`. The stable-branch K3s
+plan requires the `K3S_ADMIN_SSH_PUBLIC_KEY` repository secret.
 
 See [STATE_MIGRATION.md](STATE_MIGRATION.md) for the one-time rollout sequence
 and the guardrails for removing the failed `vm01` attempt.
