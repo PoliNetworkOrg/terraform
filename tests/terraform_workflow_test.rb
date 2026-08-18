@@ -11,43 +11,41 @@ errors = []
 permissions = workflow.fetch("permissions", {})
 errors << "the workflow must be allowed to comment on pull requests" unless permissions["pull-requests"] == "write"
 
-plan = jobs.fetch("plan", {})
-environments = plan.dig("strategy", "matrix", "environment")
-errors << "plan must run once for legacy and once for k3s" unless environments == %w[legacy k3s]
+terraform = jobs.fetch("terraform", {})
+environments = terraform.dig("strategy", "matrix", "environment")
+errors << "Terraform checks must run for legacy and k3s" unless environments == %w[legacy k3s]
 
-plan_steps = plan.fetch("steps", [])
-plan_commands = plan_steps.map { |step| step["run"] }.compact.join("\n")
-errors << "plan must use detailed exit codes" unless plan_commands.include?("-detailed-exitcode")
-errors << "plan must save its exit code for downstream jobs" unless plan_commands.include?("exitcode.txt")
-errors << "plan must render the saved plan without command output" unless plan_commands.include?("terraform show -no-color tfplan > plan.diff")
+terraform_steps = terraform.fetch("steps", [])
+terraform_commands = terraform_steps.map { |step| step["run"] }.compact.join("\n")
+errors << "each environment must run terraform fmt" unless terraform_commands.include?("terraform fmt -check")
+errors << "each environment must run terraform init" unless terraform_commands.include?("terraform init")
+errors << "each environment must run terraform validate" unless terraform_commands.include?("terraform validate -no-color")
+errors << "each environment must run terraform plan" unless terraform_commands.include?("terraform plan -no-color")
+errors << "pull-request jobs must never apply Terraform" if terraform_commands.include?("terraform apply")
 
-artifact_step = plan_steps.find { |step| step["uses"]&.start_with?("actions/upload-artifact@") }
-artifact_name = artifact_step&.dig("with", "name")
-errors << "each environment must publish a distinct saved-plan artifact" unless artifact_name&.include?("matrix.environment")
+comment = terraform_steps.find { |step| step["uses"]&.start_with?("actions/github-script@") }
+errors << "each environment must publish its PR plan" unless comment&.fetch("if", "")&.include?("pull_request")
+comment_source = comment&.dig("with", "script").to_s
+errors << "PR comments must be updated instead of duplicated" unless comment_source.include?("updateComment")
+errors << "PR comments must be distinct for each environment" unless comment_source.include?("terraform-plan:${environment}")
 
-comment = jobs.fetch("comment", {})
-errors << "the PR comment job must only run for pull requests" unless comment.fetch("if", "").include?("pull_request")
-comment_source = comment.fetch("steps", []).map { |step| [step["run"], step.dig("with", "script")].compact.join("\n") }.join("\n")
-errors << "the PR comment must include the legacy plan" unless comment_source.include?("legacy")
-errors << "the PR comment must include the k3s plan" unless comment_source.include?("k3s")
-errors << "the PR comment must be updated instead of duplicated" unless comment_source.include?("updateComment")
-errors << "the PR comment must read only the rendered plan diff" unless comment_source.include?("plan.diff") && !comment_source.include?("plan.txt")
-
-changes = jobs.fetch("changes", {})
-errors << "a push job must detect whether either plan contains changes" unless changes.fetch("if", "").include?("push")
+plan_status = terraform_steps.find { |step| step["name"] == "Terraform Plan Status" }
+errors << "a failed plan must fail its environment job" unless plan_status&.fetch("if", "")&.include?("steps.plan.outcome == 'failure'")
 
 apply = jobs.fetch("apply", {})
 apply_condition = apply.fetch("if", "")
-errors << "apply must run only on a stable push with pending changes" unless apply_condition.include?("push") && apply_condition.include?("has_changes")
+errors << "apply must run only for pushes to stable" unless apply_condition.include?("push") && apply_condition.include?("refs/heads/stable")
+errors << "apply must wait for the Terraform jobs" unless Array(apply["needs"]).include?("terraform")
 errors << "apply must require production approval" unless apply["environment"] == "production"
 
-apply_source = apply.fetch("steps", []).map { |step| step["run"] }.compact.join("\n")
-k3s_apply = apply_source.index("environments/k3s")
-legacy_apply = apply_source.index("environments/legacy")
-errors << "apply must consume both saved plans, in k3s then legacy order" unless k3s_apply && legacy_apply && k3s_apply < legacy_apply
-saved_plan_applies = apply_source.scan(/terraform(?:\s+-chdir=\S+)?\s+apply[^\n]*tfplan/)
-errors << "apply must use the saved plan files" unless saved_plan_applies.length == 2
-errors << "apply must not create a fresh plan" if apply_source.include?("terraform plan")
+apply_steps = apply.fetch("steps", [])
+apply_commands = apply_steps.map { |step| step["run"] }.compact.join("\n")
+k3s_apply = apply_steps.index { |step| step["name"] == "Terraform Apply (k3s)" }
+legacy_apply = apply_steps.index { |step| step["name"] == "Terraform Apply (legacy)" }
+errors << "stable must apply k3s then legacy" unless k3s_apply && legacy_apply && k3s_apply < legacy_apply
+errors << "both environments must use the original apply command" unless apply_commands.scan("terraform apply -auto-approve -input=false").length == 2
+
+errors << "the workflow must not manage the K3s SSH key" if raw.match?(/K3S_ADMIN_SSH_PUBLIC_KEY|compose-vm-ssh-public-key|terraform-plan-only/)
 
 if errors.empty?
   puts "terraform workflow regression test: PASS"

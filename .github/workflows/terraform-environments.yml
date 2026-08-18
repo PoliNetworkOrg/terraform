@@ -1,10 +1,10 @@
 name: Terraform
 
 on:
-  pull_request:
-    branches: [stable]
   push:
-    branches: [stable]
+    branches:
+      - stable
+  pull_request:
 
 permissions:
   contents: read
@@ -22,131 +22,101 @@ env:
   TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
-  validate:
-    name: Validate (${{ matrix.environment }})
-    runs-on: ubuntu-24.04
+  terraform:
+    name: Terraform (${{ matrix.environment }})
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        environment: [legacy, k3s]
+        environment:
+          - legacy
+          - k3s
     defaults:
       run:
         working-directory: environments/${{ matrix.environment }}
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-      - name: Check formatting
-        run: terraform fmt -check -recursive ../..
-      - name: Initialize without remote state
-        run: terraform init -backend=false
-      - name: Validate configuration
-        run: terraform validate -no-color
 
-  plan:
-    name: Plan (${{ matrix.environment }})
-    runs-on: ubuntu-24.04
-    needs: validate
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: [legacy, k3s]
-    defaults:
-      run:
-        working-directory: environments/${{ matrix.environment }}
-    env:
-      # PRs cannot read production secrets. This valid key lets their K3s plan
-      # evaluate the VM schema. Stable pushes replace it before planning.
-      TF_VAR_admin_ssh_public_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILQjBf4Q5OCGhvRHV2HBXI2Td1TmGTHoKZBSwQ+bhagJ terraform-plan-only
-    steps:
-      - uses: actions/checkout@v4
-      - name: Log in to Azure with OIDC
+      - name: Log in with Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-      - name: Load AKS credentials for the legacy providers
+
+      - name: Setup .kube
         if: matrix.environment == 'legacy'
-        run: az aks get-credentials --resource-group rg-polinetwork --name aks-polinetwork --admin --overwrite-existing
-      - name: Use the production K3s administrator key
-        if: github.event_name == 'push' && matrix.environment == 'k3s'
-        env:
-          K3S_ADMIN_SSH_PUBLIC_KEY: ${{ secrets.K3S_ADMIN_SSH_PUBLIC_KEY }}
-        run: |
-          test -n "$K3S_ADMIN_SSH_PUBLIC_KEY"
-          echo "TF_VAR_admin_ssh_public_key=$K3S_ADMIN_SSH_PUBLIC_KEY" >> "$GITHUB_ENV"
-      - name: Initialize remote state
+        run: az aks get-credentials --resource-group rg-polinetwork --name aks-polinetwork --admin --overwrite-existing || true
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
         run: terraform init
-      - name: Create saved plan
-        id: terraform-plan
-        run: |
-          set +e
-          terraform plan -detailed-exitcode -lock=false -no-color -out=tfplan > plan.txt 2>&1
-          exitcode=$?
-          set -e
 
-          cat plan.txt
-          echo "$exitcode" > exitcode.txt
-          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
 
-          if [ "$exitcode" -eq 1 ]; then
-            exit 1
-          fi
-      - name: Render plan diff
-        run: terraform show -no-color tfplan > plan.diff
-      - name: Add plan to job summary
-        run: |
-          {
-            echo "## ${{ matrix.environment }} plan"
-            echo '<details><summary>Show plan</summary>'
-            echo
-            echo '```terraform'
-            cat plan.diff
-            echo '```'
-            echo '</details>'
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Publish saved plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan-${{ matrix.environment }}
-          path: |
-            environments/${{ matrix.environment }}/tfplan
-            environments/${{ matrix.environment }}/plan.diff
-            environments/${{ matrix.environment }}/exitcode.txt
-          retention-days: 1
-          if-no-files-found: error
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+        continue-on-error: true
 
-  comment:
-    if: github.event_name == 'pull_request'
-    name: Comment Terraform plans
-    runs-on: ubuntu-24.04
-    needs: plan
-    steps:
-      - name: Download plans
-        uses: actions/download-artifact@v4
-        with:
-          pattern: tfplan-*
-          path: plans
-      - name: Publish plans in the pull request
+      - name: Publish Terraform result to the pull request
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
+        env:
+          ENVIRONMENT: ${{ matrix.environment }}
+          FMT_OUTCOME: ${{ steps.fmt.outcome }}
+          INIT_OUTCOME: ${{ steps.init.outcome }}
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+          VALIDATION: ${{ steps.validate.outputs.stdout }}
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+          PLAN: ${{ steps.plan.outputs.stdout }}
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
-            const marker = '<!-- terraform-environments-plan -->';
+            const environment = process.env.ENVIRONMENT;
+            const marker = `<!-- terraform-plan:${environment} -->`;
+            const truncate = (text, limit) => {
+              if (text.length <= limit) return text;
+              return `${text.slice(0, limit)}\n\n... output truncated; see the workflow log for the complete output.`;
+            };
+            const validation = truncate(process.env.VALIDATION || '', 8_000);
+            const plan = truncate(process.env.PLAN || '', 45_000);
+            const body = `${marker}
+            ## Terraform (${environment})
 
-            function section(environment) {
-              const path = `plans/tfplan-${environment}/plan.diff`;
-              let plan = fs.readFileSync(path, 'utf8');
-              if (plan.length > 30_000) {
-                plan = `${plan.slice(0, 30_000)}\n\n... plan diff truncated; see the workflow artifact for the complete diff.`;
-              }
-              return `### ${environment}\n\n<details><summary>Show plan</summary>\n\n\`\`\`terraform\n${plan}\n\`\`\`\n</details>`;
-            }
+            #### Format and style: \`${process.env.FMT_OUTCOME}\`
+            #### Initialization: \`${process.env.INIT_OUTCOME}\`
+            #### Validation: \`${process.env.VALIDATE_OUTCOME}\`
 
-            const body = `${marker}\n## Terraform plans\n\n${section('legacy')}\n\n${section('k3s')}`;
+            <details><summary>Validation output</summary>
+
+            \`\`\`
+            ${validation}
+            \`\`\`
+
+            </details>
+
+            #### Plan: \`${process.env.PLAN_OUTCOME}\`
+
+            <details><summary>Show plan</summary>
+
+            \`\`\`terraform
+            ${plan}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${context.actor}, Action: \`${context.eventName}\`, Working directory: \`environments/${environment}\`, Workflow: \`${context.workflow}\`*`;
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -172,84 +142,44 @@ jobs:
               });
             }
 
-  changes:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stable'
-    name: Detect pending changes
-    runs-on: ubuntu-24.04
-    needs: plan
-    outputs:
-      has_changes: ${{ steps.detect.outputs.has_changes }}
-      legacy: ${{ steps.detect.outputs.legacy }}
-      k3s: ${{ steps.detect.outputs.k3s }}
-    steps:
-      - name: Download plan metadata
-        uses: actions/download-artifact@v4
-        with:
-          pattern: tfplan-*
-          path: plans
-      - name: Read plan exit codes
-        id: detect
-        run: |
-          legacy=$(cat plans/tfplan-legacy/exitcode.txt)
-          k3s=$(cat plans/tfplan-k3s/exitcode.txt)
-
-          case "$legacy:$k3s" in
-            0:0|0:2|2:0|2:2) ;;
-            *) echo "Unexpected plan exit codes: legacy=$legacy k3s=$k3s" >&2; exit 1 ;;
-          esac
-
-          echo "legacy=$legacy" >> "$GITHUB_OUTPUT"
-          echo "k3s=$k3s" >> "$GITHUB_OUTPUT"
-          if [ "$legacy" -eq 2 ] || [ "$k3s" -eq 2 ]; then
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-          fi
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
 
   apply:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stable' && needs.changes.outputs.has_changes == 'true'
-    name: Apply Terraform plans
-    runs-on: ubuntu-24.04
-    needs: [plan, changes]
+    name: Terraform Apply
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stable'
+    runs-on: ubuntu-22.04
+    needs: terraform
     environment: production
     concurrency: terraform-production
-    env:
-      TF_VAR_admin_ssh_public_key: ${{ secrets.K3S_ADMIN_SSH_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v4
-      - name: Log in to Azure with OIDC
+
+      - name: Log in with Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-      - name: Download K3s saved plan
-        if: needs.changes.outputs.k3s == '2'
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-k3s
-          path: environments/k3s
-      - name: Download legacy saved plan
-        if: needs.changes.outputs.legacy == '2'
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-legacy
-          path: environments/legacy
-      - name: Initialize K3s remote state
-        if: needs.changes.outputs.k3s == '2'
-        run: terraform -chdir=environments/k3s init
-      - name: Apply K3s saved plan
-        if: needs.changes.outputs.k3s == '2'
-        run: terraform -chdir=environments/k3s apply -auto-approve tfplan
-      - name: Load AKS credentials for the legacy providers
-        if: needs.changes.outputs.legacy == '2'
-        run: az aks get-credentials --resource-group rg-polinetwork --name aks-polinetwork --admin --overwrite-existing
-      - name: Initialize legacy remote state
-        if: needs.changes.outputs.legacy == '2'
-        run: terraform -chdir=environments/legacy init
-      - name: Apply legacy saved plan
-        if: needs.changes.outputs.legacy == '2'
-        run: terraform -chdir=environments/legacy apply -auto-approve tfplan
+
+      - name: Terraform Init (k3s)
+        working-directory: environments/k3s
+        run: terraform init
+
+      - name: Terraform Apply (k3s)
+        working-directory: environments/k3s
+        run: terraform apply -auto-approve -input=false
+
+      - name: Setup .kube
+        run: az aks get-credentials --resource-group rg-polinetwork --name aks-polinetwork --admin --overwrite-existing || true
+
+      - name: Terraform Init (legacy)
+        working-directory: environments/legacy
+        run: terraform init
+
+      - name: Terraform Apply (legacy)
+        working-directory: environments/legacy
+        run: terraform apply -auto-approve -input=false

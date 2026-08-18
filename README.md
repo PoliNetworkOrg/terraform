@@ -28,7 +28,6 @@ az login
 az account set --subscription <subscription-id>
 export ARM_SUBSCRIPTION_ID=<subscription-id>
 export TF_VAR_subscription_id="$ARM_SUBSCRIPTION_ID"
-export TF_VAR_admin_ssh_public_key="$(< ~/.ssh/id_ed25519.pub)"
 
 terraform -chdir=environments/legacy init -backend-config=use_oidc=false
 terraform -chdir=environments/legacy validate
@@ -46,12 +45,10 @@ Do not use `terraform destroy` at repository level. Always select one root with
 
 ## Delivery
 
-Pull requests validate and plan both roots, then update one PR comment with the
-`legacy` and `k3s` plans. A push to `stable` repeats both plans. If either plan
-contains changes, the workflow waits for approval through the GitHub
-`production` environment and applies the saved plans without recreating them.
-When both roots change, it applies `k3s` before `legacy`. The stable-branch K3s
-plan requires the `K3S_ADMIN_SSH_PUBLIC_KEY` repository secret.
+Pull requests run format, initialization, validation, and plan for both roots,
+then update one PR comment per environment. Pull requests cannot run apply. A
+push to `stable` repeats both plans, then waits for approval through the GitHub
+`production` environment before applying `k3s` followed by `legacy`.
 
 See [STATE_MIGRATION.md](STATE_MIGRATION.md) for the one-time rollout sequence
 and the guardrails for removing the failed `vm01` attempt.

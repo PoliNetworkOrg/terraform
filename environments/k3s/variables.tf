@@ -9,18 +9,6 @@ variable "subscription_id" {
   }
 }
 
-variable "admin_ssh_public_key" {
-  description = "OpenSSH public key for the break-glass VM administrator. Pass it through TF_VAR_admin_ssh_public_key; it is not read from Key Vault."
-  type        = string
-  sensitive   = true
-  nullable    = false
-
-  validation {
-    condition     = can(regex("^ssh-(ed25519|rsa|ecdsa-[^ ]+) [A-Za-z0-9+/=]+(?: .*)?$", trimspace(var.admin_ssh_public_key)))
-    error_message = "admin_ssh_public_key must be a supported OpenSSH public key."
-  }
-}
-
 variable "location" {
   description = "Azure region approved by the migration plan."
   type        = string

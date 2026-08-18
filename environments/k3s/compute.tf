@@ -18,7 +18,7 @@ resource "azurerm_linux_virtual_machine" "k3s" {
 
   admin_ssh_key {
     username   = var.admin_username
-    public_key = trimspace(var.admin_ssh_public_key)
+    public_key = trimspace(data.azurerm_key_vault_secret.admin_ssh_public_key.value)
   }
 
   identity {
