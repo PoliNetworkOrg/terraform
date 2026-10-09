@@ -6,8 +6,6 @@ resource "azurerm_resource_group" "rg" {
 data "azurerm_client_config" "current" {}
 
 locals {
-  mariadb_internal_ip  = "mariadb-service.mariadb.svc.cluster.local"
-  postgres_internal_ip = "postgres-service.postgres.svc.cluster.local"
   backup_allowed_subnet_ids = [
     "${azurerm_resource_group.rg.id}/providers/Microsoft.Network/virtualNetworks/vnet-k3s/subnets/snet-k3s",
   ]
@@ -48,79 +46,6 @@ moved {
   to   = module.shared.azurerm_consumption_budget_resource_group.annual
 }
 
-module "aks" {
-  depends_on = [module.keyvault]
-  source     = "../../modules/aks/"
-
-  ca_tls_key = data.azurerm_key_vault_secret.ca_tls_key.value
-  ca_tls_crt = data.azurerm_key_vault_secret.ca_tls_crt.value
-
-  additional_node_pools = [
-    {
-      name                = "supportpool"
-      min_count           = 0
-      max_count           = 0
-      node_count          = 0
-      enable_auto_scaling = false
-      vm_size             = "Standard_B2s"
-      mode                = "User"
-    }
-  ]
-
-  rg_location     = azurerm_resource_group.rg.location
-  rg_name         = azurerm_resource_group.rg.name
-  subscription_id = data.azurerm_client_config.current.subscription_id
-
-  kubernetes_orchestrator_version = "1.29.13"
-
-}
-
-module "argo-cd" {
-  depends_on = [
-    module.aks
-  ]
-
-  source = "../../modules/argocd/"
-  applications = [
-    file("./argocd-applications.yaml")
-  ]
-}
-
-module "cloudflare" {
-  depends_on = [
-    module.aks
-  ]
-
-  source       = "../../modules/cloudflare/"
-  tunnel_token = data.azurerm_key_vault_secret.cloudflare_tunnel_token.value
-}
-
-module "app_dev" {
-  depends_on = [
-    module.mariadb
-  ]
-
-  source = "../../modules/app/"
-
-  app_namespace    = "app-dev"
-  app_secret_token = data.azurerm_key_vault_secret.dev_app_secret_token.value
-  db_database      = "polinetwork_app_dev"
-  db_host          = local.mariadb_internal_ip
-  db_password      = data.azurerm_key_vault_secret.dev_db_password.value
-  db_user          = data.azurerm_key_vault_secret.dev_db_user.value
-}
-
-module "kubernetes-dashboard" {
-  depends_on = [
-    module.aks
-  ]
-
-  source = "../../modules/kubernetes-dashboard/"
-
-  // variables
-  namespace = "kubernetes-dashboard"
-}
-
 module "keyvault" {
   source = "../../modules/keyvault/"
 
@@ -139,7 +64,6 @@ module "storageaccount" {
 
   location = azurerm_resource_group.rg.location
   rg_name  = azurerm_resource_group.rg.name
-
 }
 
 module "shared" {
@@ -151,73 +75,72 @@ module "shared" {
   allowed_subnet_ids  = local.backup_allowed_subnet_ids
 }
 
-module "mariadb" {
-  depends_on = [
-    module.aks,
-    module.argo-cd
-  ]
-
-  source = "../../modules/mariadb/"
-
-  db_config = [
-    {
-      password = data.azurerm_key_vault_secret.dev_db_password.value
-      user     = data.azurerm_key_vault_secret.dev_db_user.value
-      database = "polinetwork_test"
-    },
-    {
-      password = data.azurerm_key_vault_secret.prod_mat_db_password.value
-      user     = data.azurerm_key_vault_secret.prod_mat_db_user.value
-      database = "polinetwork_materials"
-    },
-    {
-      password = data.azurerm_key_vault_secret.prod_db_password.value
-      user     = data.azurerm_key_vault_secret.prod_mod_db_user.value
-      database = "polinetwork"
-    },
-    {
-      user     = data.azurerm_key_vault_secret.dev_db_user.value
-      password = data.azurerm_key_vault_secret.dev_db_password.value
-      database = "polinetwork_app_dev"
-    },
-    {
-      user     = data.azurerm_key_vault_secret.dev_app_admin_db_user.value
-      password = data.azurerm_key_vault_secret.dev_app_admin_db_password.value
-      database = "polinetwork_app_dev"
-    },
-    {
-      user     = data.azurerm_key_vault_secret.dev_newbot_db_user.value
-      password = data.azurerm_key_vault_secret.dev_newbot_db_password.value
-      database = "polinetwork_newbot_dev"
-    }
-  ]
-
-  mariadb_root_password = data.azurerm_key_vault_secret.admin_db_password.value
-  mariadb_internal_ip   = local.mariadb_internal_ip
-
-  location = azurerm_resource_group.rg.location
-  rg_name  = azurerm_resource_group.rg.name
+# AKS decommission (production runs on K3s since 2026-10-09). Only the cluster
+# and its node pool are destroyed. Everything that lived inside the cluster
+# disappears with it, so Terraform forgets it instead of calling the cluster.
+# The two database disks are forgotten too and kept for the 14-day retention
+# window of the migration plan; delete them manually after 2026-10-23.
+removed {
+  from = module.argo-cd
+  lifecycle {
+    destroy = false
+  }
 }
 
-module "longhorn" {
-  depends_on = [
-    module.aks,
-    module.argo-cd
-  ]
-  source      = "../../modules/longhorn/"
-  rg_location = azurerm_resource_group.rg.location
-  rg_name     = azurerm_resource_group.rg.name
+removed {
+  from = module.cloudflare
+  lifecycle {
+    destroy = false
+  }
 }
 
-module "postgres" {
-  depends_on = [
-    module.aks,
-    module.argo-cd
-  ]
+removed {
+  from = module.app_dev
+  lifecycle {
+    destroy = false
+  }
+}
 
-  source               = "../../modules/postgres/"
-  postgres_internal_ip = local.postgres_internal_ip
+removed {
+  from = module.kubernetes-dashboard
+  lifecycle {
+    destroy = false
+  }
+}
 
-  location = azurerm_resource_group.rg.location
-  rg_name  = azurerm_resource_group.rg.name
+removed {
+  from = module.longhorn
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = module.mariadb
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = module.postgres
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = module.aks.kubernetes_cluster_role_binding.adminorg
+  lifecycle {
+    destroy = false
+  }
+}
+
+# Azure refuses to delete a role definition while assignments reference it;
+# the assignments on the deleted cluster are cleaned up manually first.
+removed {
+  from = module.aks.azurerm_role_definition.aks_reader
+  lifecycle {
+    destroy = false
+  }
 }
