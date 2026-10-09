@@ -8,8 +8,3 @@ terraform {
     use_oidc             = true              # Can also be set via `ARM_USE_OIDC` environment variable.
   }
 }
-
-data "azurerm_kubernetes_cluster" "credentials" {
-  name                = "aks-polinetwork"
-  resource_group_name = "rg-polinetwork"
-}
