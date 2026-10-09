@@ -44,3 +44,8 @@ output "backup_container_resource_manager_id" {
   description = "Existing backup container retained outside this state."
   value       = data.azurerm_storage_container.backup.id
 }
+
+output "k3s_oidc_issuer" {
+  description = "Service-account issuer configured on the K3s API server."
+  value       = local.k3s_oidc_issuer
+}
