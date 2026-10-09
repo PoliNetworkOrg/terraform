@@ -23,8 +23,9 @@ resource "azurerm_linux_virtual_machine" "k3s" {
 
   identity {
     type = "SystemAssigned, UserAssigned"
+    # ESO authenticates through workload identity federation, so its identity
+    # is deliberately not attached to the VM.
     identity_ids = [
-      azurerm_user_assigned_identity.k3s["eso"].id,
       azurerm_user_assigned_identity.k3s["backend"].id,
       azurerm_user_assigned_identity.k3s["backup"].id,
     ]
