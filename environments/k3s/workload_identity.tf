@@ -15,7 +15,6 @@ resource "azurerm_storage_account" "oidc" {
   #checkov:skip=CKV_AZURE_59:Entra ID fetches the issuer documents over the public endpoint.
   #checkov:skip=CKV_AZURE_33:Blob-only account; the queue service is unused.
   #checkov:skip=CKV_AZURE_206:LRS is enough for documents reproducible from Git and the K3s datastore.
-  #checkov:skip=CKV2_AZURE_40:Writing the account key requires RG management rights, which can already edit the federated credential.
   name                            = "pnk3soidc"
   location                        = var.location
   resource_group_name             = data.azurerm_resource_group.shared.name
@@ -24,13 +23,45 @@ resource "azurerm_storage_account" "oidc" {
   min_tls_version                 = "TLS1_2"
   https_traffic_only_enabled      = true
   allow_nested_items_to_be_public = true
-  tags                            = merge(var.tags, { Purpose = "k3s-oidc-issuer" })
+  # Account keys could rewrite the JWKS; writes need Entra data roles instead.
+  shared_access_key_enabled = false
+  tags                      = merge(var.tags, { Purpose = "k3s-oidc-issuer" })
 
   blob_properties {
     delete_retention_policy {
       days = 7
     }
   }
+}
+
+# Terraform reads and writes the issuer documents with Entra ID. The plan
+# identity can only read them; only the apply identity can replace the JWKS.
+locals {
+  oidc_document_roles = {
+    plan  = { principal_id = var.terraform_plan_principal_id, role = "Storage Blob Data Reader" }
+    apply = { principal_id = var.terraform_apply_principal_id, role = "Storage Blob Data Contributor" }
+  }
+}
+
+resource "azurerm_role_assignment" "oidc_documents" {
+  for_each = local.oidc_document_roles
+
+  scope                = azurerm_storage_account.oidc.id
+  role_definition_name = each.value.role
+  principal_id         = each.value.principal_id
+  principal_type       = "ServicePrincipal"
+}
+
+# Created out of band so the pull request plan could read the documents
+# before these assignments existed in state.
+import {
+  to = azurerm_role_assignment.oidc_documents["plan"]
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-polinetwork/providers/Microsoft.Storage/storageAccounts/pnk3soidc/providers/Microsoft.Authorization/roleAssignments/30f20fa3-00b3-493d-83ea-6306a65122e9"
+}
+
+import {
+  to = azurerm_role_assignment.oidc_documents["apply"]
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-polinetwork/providers/Microsoft.Storage/storageAccounts/pnk3soidc/providers/Microsoft.Authorization/roleAssignments/df7e6941-8479-4f7b-b585-abf6daf52344"
 }
 
 resource "azurerm_storage_container" "oidc" {

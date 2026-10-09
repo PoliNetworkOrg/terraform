@@ -88,3 +88,15 @@ variable "tags" {
     Owner       = "PoliNetwork"
   }
 }
+
+variable "terraform_plan_principal_id" {
+  description = "Object ID of gh-action-terraform-readonly, which runs pull request plans."
+  type        = string
+  default     = "81dd9fd1-ea71-420a-9f8a-8cbb74f479a6"
+}
+
+variable "terraform_apply_principal_id" {
+  description = "Object ID of gh-action-terraform-readwrite, which runs production applies."
+  type        = string
+  default     = "f220ce5b-e174-413d-b6f8-04e214b85d76"
+}
