@@ -13,6 +13,9 @@ locals {
 resource "azurerm_storage_account" "oidc" {
   #checkov:skip=CKV_AZURE_190:The OIDC container must allow anonymous blob reads for Entra ID discovery.
   #checkov:skip=CKV_AZURE_59:Entra ID fetches the issuer documents over the public endpoint.
+  #checkov:skip=CKV_AZURE_33:Blob-only account; the queue service is unused.
+  #checkov:skip=CKV_AZURE_206:LRS is enough for documents reproducible from Git and the K3s datastore.
+  #checkov:skip=CKV2_AZURE_40:Writing the account key requires RG management rights, which can already edit the federated credential.
   name                            = "pnk3soidc"
   location                        = var.location
   resource_group_name             = data.azurerm_resource_group.shared.name
