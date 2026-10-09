@@ -13,8 +13,10 @@ resource "azurerm_linux_virtual_machine" "k3s" {
   patch_assessment_mode           = "ImageDefault"
   patch_mode                      = "ImageDefault"
   secure_boot_enabled             = true
-  vtpm_enabled                    = true
-  tags                            = var.tags
+  # Azure now always enables agent platform updates and ignores false.
+  vm_agent_platform_updates_enabled = true
+  vtpm_enabled                      = true
+  tags                              = var.tags
 
   admin_ssh_key {
     username   = var.admin_username
