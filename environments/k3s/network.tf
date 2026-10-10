@@ -17,14 +17,16 @@ resource "azurerm_public_ip" "egress" {
 }
 
 # Outbound address of k3s01. While nat-k3s is attached to the subnet, the NAT
-# Gateway takes precedence and this address stays idle.
+# Gateway takes precedence for outbound traffic. Inbound traffic is denied by
+# nsg-k3s.
 resource "azurerm_public_ip" "k3s" {
-  name                    = "pip-k3s"
-  location                = var.location
-  resource_group_name     = data.azurerm_resource_group.shared.name
-  allocation_method       = "Static"
-  sku                     = "Standard"
-  zones                   = [var.availability_zone]
+  name                = "pip-k3s"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.shared.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = [var.availability_zone]
+  # Applies to inbound flows only; the outbound idle timeout is fixed at 4 minutes.
   idle_timeout_in_minutes = 10
   tags                    = merge(var.tags, { Purpose = "outbound-only" })
 }
