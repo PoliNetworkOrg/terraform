@@ -16,9 +16,7 @@ resource "azurerm_public_ip" "egress" {
   tags                = merge(var.tags, { Purpose = "outbound-only" })
 }
 
-# Outbound address of k3s01. While nat-k3s is attached to the subnet, the NAT
-# Gateway takes precedence for outbound traffic. Inbound traffic is denied by
-# nsg-k3s.
+# Outbound address of k3s01. nsg-k3s denies all inbound traffic to it.
 resource "azurerm_public_ip" "k3s" {
   name                = "pip-k3s"
   location            = var.location
@@ -53,11 +51,6 @@ resource "azurerm_subnet" "k3s" {
   address_prefixes                = ["10.43.1.0/24"]
   default_outbound_access_enabled = false
   service_endpoints               = ["Microsoft.KeyVault", "Microsoft.Storage"]
-}
-
-resource "azurerm_subnet_nat_gateway_association" "k3s" {
-  subnet_id      = azurerm_subnet.k3s.id
-  nat_gateway_id = azurerm_nat_gateway.k3s.id
 }
 
 resource "azurerm_network_security_group" "k3s" {
@@ -100,8 +93,5 @@ resource "azurerm_network_interface" "k3s" {
     public_ip_address_id          = azurerm_public_ip.k3s.id
   }
 
-  depends_on = [
-    azurerm_subnet_nat_gateway_association.k3s,
-    azurerm_subnet_network_security_group_association.k3s,
-  ]
+  depends_on = [azurerm_subnet_network_security_group_association.k3s]
 }

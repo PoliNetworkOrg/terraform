@@ -14,7 +14,7 @@ output "private_ip_address" {
 }
 
 output "public_ip_address" {
-  description = "Outbound address of the VM once nat-k3s is detached, for third-party allowlists. Inbound traffic is denied."
+  description = "Outbound address of the VM, for third-party allowlists. Inbound traffic is denied."
   value       = azurerm_public_ip.k3s.ip_address
 }
 
