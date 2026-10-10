@@ -16,6 +16,21 @@ resource "azurerm_public_ip" "egress" {
   tags                = merge(var.tags, { Purpose = "outbound-only" })
 }
 
+# Outbound address of k3s01. While nat-k3s is attached to the subnet, the NAT
+# Gateway takes precedence for outbound traffic. Inbound traffic is denied by
+# nsg-k3s.
+resource "azurerm_public_ip" "k3s" {
+  name                = "pip-k3s"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.shared.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = [var.availability_zone]
+  # Applies to inbound flows only; the outbound idle timeout is fixed at 4 minutes.
+  idle_timeout_in_minutes = 10
+  tags                    = merge(var.tags, { Purpose = "outbound-only" })
+}
+
 resource "azurerm_nat_gateway" "k3s" {
   name                    = "nat-k3s"
   location                = var.location
@@ -70,6 +85,7 @@ resource "azurerm_subnet_network_security_group_association" "k3s" {
 }
 
 resource "azurerm_network_interface" "k3s" {
+  #checkov:skip=CKV_AZURE_119:The public IP is outbound-only: nsg-k3s denies all inbound traffic and the host firewall accepts SSH only from private ranges.
   name                           = "nic-k3s"
   location                       = var.location
   resource_group_name            = data.azurerm_resource_group.shared.name
@@ -81,6 +97,7 @@ resource "azurerm_network_interface" "k3s" {
     subnet_id                     = azurerm_subnet.k3s.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.43.1.4"
+    public_ip_address_id          = azurerm_public_ip.k3s.id
   }
 
   depends_on = [
