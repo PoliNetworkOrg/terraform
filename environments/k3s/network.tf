@@ -6,16 +6,6 @@ resource "azurerm_virtual_network" "k3s" {
   tags                = var.tags
 }
 
-resource "azurerm_public_ip" "egress" {
-  name                = "pip-k3s-egress"
-  location            = var.location
-  resource_group_name = data.azurerm_resource_group.shared.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-  zones               = [var.availability_zone]
-  tags                = merge(var.tags, { Purpose = "outbound-only" })
-}
-
 # Outbound address of k3s01. nsg-k3s denies all inbound traffic to it.
 resource "azurerm_public_ip" "k3s" {
   name                = "pip-k3s"
@@ -27,21 +17,6 @@ resource "azurerm_public_ip" "k3s" {
   # Applies to inbound flows only; the outbound idle timeout is fixed at 4 minutes.
   idle_timeout_in_minutes = 10
   tags                    = merge(var.tags, { Purpose = "outbound-only" })
-}
-
-resource "azurerm_nat_gateway" "k3s" {
-  name                    = "nat-k3s"
-  location                = var.location
-  resource_group_name     = data.azurerm_resource_group.shared.name
-  sku_name                = "Standard"
-  idle_timeout_in_minutes = 10
-  zones                   = [var.availability_zone]
-  tags                    = var.tags
-}
-
-resource "azurerm_nat_gateway_public_ip_association" "k3s" {
-  nat_gateway_id       = azurerm_nat_gateway.k3s.id
-  public_ip_address_id = azurerm_public_ip.egress.id
 }
 
 resource "azurerm_subnet" "k3s" {

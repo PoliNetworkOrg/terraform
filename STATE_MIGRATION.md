@@ -11,7 +11,7 @@ state.tfstate
 └── module.shared: polinetworkbackups, backup containers, retention, budgets
 
 k3s.tfstate
-└── k3s01, K3s network/NAT, data disks, identities, RBAC, and three RBAC vaults
+└── k3s01, K3s network and public IP, data disks, identities, RBAC, and three RBAC vaults
 ```
 
 The K3s root uses data sources for the resource group and existing Blob
@@ -59,14 +59,35 @@ must not be attached to a pull request because they can contain sensitive data.
 No manual `terraform state mv` is required for this refactor. The declarative
 `moved` blocks perform the address changes inside the existing `state.tfstate`.
 
-## Why the target includes a NAT public IP
+## Outbound connectivity
 
-The VM NIC has no public IP and the NSG denies all inbound traffic. K3s still
-needs outbound HTTPS for Debian updates, GHCR, GitHub, Azure, and Cloudflare.
-New Azure private subnets no longer receive implicit outbound connectivity, so
-the root creates an outbound-only NAT Gateway and public IP. The NAT does not
-accept unsolicited inbound connections. Its cost must be included in the final
-budget approval.
+K3s needs outbound HTTPS for Debian updates, GHCR, GitHub, Azure, and
+Cloudflare, including the tunnel that carries all inbound traffic. `snet-k3s`
+is a private subnet without default outbound access, so `nic-k3s` carries a
+Standard static public IP (`pip-k3s`) used only for outbound flows:
+
+- `nsg-k3s` denies all inbound traffic, and a Standard public IP is closed
+  until an NSG rule opens it;
+- the host firewall (polinetwork-cd, `roles/security`) accepts SSH only from
+  private ranges; WARP sessions arrive from the cloudflared Pods;
+- Blob Storage and Key Vault traffic uses the subnet service endpoints, not the
+  public IP.
+
+A NAT Gateway would add no isolation for a single VM and costs about
+USD 33/month plus USD 0.045/GB processed, against USD 3.65/month for the IP.
+Add one only if the subnet grows beyond one VM or needs more egress addresses.
+
+Changing the egress path resets every in-flight outbound connection, including
+the Cloudflare tunnel, so public requests and WARP SSH sessions in flight fail
+until `cloudflared` reconnects. Change it in separate applies so the subnet
+always has a working route:
+
+1. attach the new path while the old one still takes precedence (a NAT Gateway
+   outranks an instance-level public IP);
+2. switch, off-peak, then run
+   `kubectl -n cloudflared rollout restart deployment/cloudflared` so the
+   tunnel does not wait for keepalive timeouts;
+3. delete the old resources.
 
 ## Approved cleanup of the failed attempt
 
