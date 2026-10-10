@@ -13,6 +13,11 @@ output "private_ip_address" {
   value       = azurerm_network_interface.k3s.private_ip_address
 }
 
+output "public_ip_address" {
+  description = "Outbound address of the VM, for third-party allowlists. Inbound traffic is denied."
+  value       = azurerm_public_ip.k3s.ip_address
+}
+
 output "availability_zone" {
   description = "Zone shared by compute and data disks."
   value       = azurerm_linux_virtual_machine.k3s.zone
