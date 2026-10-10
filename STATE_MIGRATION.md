@@ -72,9 +72,14 @@ Standard static public IP (`pip-k3s`) used only for outbound flows:
   private ranges; WARP sessions arrive from the cloudflared Pods;
 - Blob Storage and Key Vault traffic uses the subnet service endpoints, not the
   public IP.
+- outbound flows idle for more than 4 minutes are dropped (fixed for
+  instance-level public IPs), so long-lived clients need keepalives or must
+  reconnect.
 
-A NAT Gateway would add no isolation for a single VM and costs about
-USD 33/month plus USD 0.045/GB processed, against USD 3.65/month for the IP.
+Without a public IP on the NIC, a NAT Gateway would keep the VM unreachable
+even if an NSG rule were opened by mistake. For a single VM, that second
+barrier isn't worth about USD 33/month plus USD 0.045/GB processed, against
+USD 3.65/month for the IP.
 Add one only if the subnet grows beyond one VM or needs more egress addresses.
 
 Changing the egress path resets every in-flight outbound connection, including
